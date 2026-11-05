@@ -29,24 +29,27 @@ $nav = [
     'mandate'  => ['Mandate', 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6Zm-1 7V3.5L18.5 9H13Zm-4.5 9L6 15.5l1.4-1.4 1.1 1.1 3.6-3.6 1.4 1.4-5 5Z'],
 ];
 ?>
-<div class="shell">
-  <aside class="side">
+<header class="kb-bar">
+  <div class="kb-bar-in">
     <?= brand_html() ?>
-    <nav class="nav" id="nav" aria-label="Main">
+    <nav class="kb-tabs" id="nav" aria-label="Main">
       <?php foreach ($nav as $key => [$label, $path]): ?>
         <button type="button" data-view="<?= e($key) ?>" class="<?= $key === 'overview' ? 'on' : '' ?>"><?= $icon($path) ?><span><?= e($label) ?></span><b class="nav-badge" data-badge="<?= e($key) ?>"></b></button>
       <?php endforeach; ?>
     </nav>
-    <div class="side-foot">
-      <div class="who"><span class="avatar"><?= e(mb_strtoupper(mb_substr($me['name'], 0, 1))) ?></span><span><b><?= e($me['name']) ?></b><small><?= e($me['business_name'] ?: 'Freelancer') ?></small></span></div>
-      <form method="post" action="<?= e(url('logout.php')) ?>"><?= csrf_field() ?><button class="link-btn" type="submit">Sign out</button></form>
+    <div class="kb-user">
+      <span class="avatar" title="<?= e($me['name']) ?>"><?= e(mb_strtoupper(mb_substr($me['name'], 0, 1))) ?></span>
+      <span class="kb-who"><b><?= e($me['name']) ?></b><small><?= e($me['business_name'] ?: 'Freelancer') ?></small></span>
+      <form method="post" action="<?= e(url('logout.php')) ?>"><?= csrf_field() ?><button class="kb-out" type="submit">Sign out</button></form>
     </div>
-  </aside>
+  </div>
+</header>
+<div class="kb-flag" aria-hidden="true"><i></i><i></i></div>
 
+<div class="shell">
   <main class="main" id="main">
     <header class="top">
-      <div class="top-brand"><?= brand_html() ?></div>
-      <h1 id="viewTitle">Overview</h1>
+      <div><p class="kb-crumb">Konbit workspace</p><h1 id="viewTitle">Overview</h1></div>
       <div class="top-right">
         <span class="pill pill-sandbox" id="modePill">Sandbox</span>
         <span class="pill" id="mandatePill">Mandate</span>
@@ -74,12 +77,6 @@ $nav = [
     <section class="view" data-view="mandate" id="v-mandate"></section>
   </main>
 </div>
-
-<nav class="bottom-nav" id="bottomNav" aria-label="Main">
-  <?php foreach (['overview', 'inbox', 'payouts', 'schedule', 'crew'] as $key): ?>
-    <button type="button" data-view="<?= e($key) ?>" class="<?= $key === 'overview' ? 'on' : '' ?>"><?= $icon($nav[$key][1]) ?><span><?= e(explode(' ', $nav[$key][0])[0]) ?></span><b class="nav-badge" data-badge="<?= e($key) ?>"></b></button>
-  <?php endforeach; ?>
-</nav>
 
 <button class="agent-fab" id="agentFab" type="button" aria-controls="agentPanel" aria-expanded="false">
   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a2 2 0 0 1 2 2c0 .7-.4 1.4-1 1.7V7h5a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3v-8a3 3 0 0 1 3-3h5V5.7A2 2 0 0 1 12 2ZM8.5 12a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Zm7 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Z"/></svg>

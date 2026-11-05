@@ -14,8 +14,8 @@ function page_head(string $title, string $bodyClass, array $bodyData = [], array
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#121212" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#00209F">
+<meta name="color-scheme" content="light">
 <meta name="csrf-token" content="<?= e(csrf_token()) ?>">
 <meta name="robots" content="<?= $description !== '' ? 'index, follow' : 'noindex' ?>">
 <?php if ($description !== ''): ?><meta name="description" content="<?= e($description) ?>">
@@ -26,7 +26,7 @@ function page_head(string $title, string $bodyClass, array $bodyData = [], array
 <link rel="icon" href="<?= e(asset('logo.svg')) ?>" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Outfit:wght@600;700;800&family=JetBrains+Mono:wght@500&display=swap">
 <?php foreach ($extraCss as $css): ?><link rel="stylesheet" href="<?= e(str_starts_with($css, 'vendor/') ? url('assets/' . $css) . '?v=' . FA_ASSET_VER : asset($css)) ?>">
 <?php endforeach; ?>
 <link rel="stylesheet" href="<?= e(asset('app.css')) ?>">
@@ -54,11 +54,12 @@ function flash_html(): string
 
 function logo_svg(string $class = 'logo'): string
 {
+    // The Haitian flag split (blue over red) with three crew members joined by one line.
     return '<svg class="' . e($class) . '" viewBox="0 0 48 48" aria-hidden="true">'
-        . '<rect width="48" height="48" rx="13" fill="#00209F"/>'
-        . '<path d="M14 31c3-6 7-9 10-9s7 3 10 9" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/>'
-        . '<circle cx="14" cy="17" r="4" fill="#F5C518"/><circle cx="24" cy="13" r="4" fill="#fff"/><circle cx="34" cy="17" r="4" fill="#D21034"/>'
-        . '<path d="M17 37h14" stroke="#F5C518" stroke-width="3" stroke-linecap="round"/>'
+        . '<rect width="48" height="24" rx="6" fill="#00209F"/><rect y="24" width="48" height="24" rx="6" fill="#D21034"/>'
+        . '<rect y="18" width="48" height="12" fill="#00209F"/><rect y="24" width="48" height="6" fill="#D21034"/>'
+        . '<path d="M11 24h26" stroke="#fff" stroke-width="3" stroke-linecap="round"/>'
+        . '<circle cx="11" cy="24" r="5" fill="#fff"/><circle cx="24" cy="24" r="5" fill="#fff"/><circle cx="37" cy="24" r="5" fill="#fff"/>'
         . '</svg>';
 }
 

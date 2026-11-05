@@ -14,8 +14,9 @@ page_head(
 ?>
 <header class="l-top">
   <?= brand_html() ?>
-  <nav><a href="#how">How it works</a><a href="#safe">Safety</a><a href="<?= e(url('login.php')) ?>" class="btn btn-ghost btn-sm">Sign in</a><a href="<?= e(url('register.php')) ?>" class="btn btn-primary btn-sm">Start free</a></nav>
+  <nav><a href="#how">How it works</a><a href="#safe">Safety</a><a href="<?= e(url('developers/')) ?>">Developers</a><a href="<?= e(url('login.php')) ?>" class="l-signin">Sign in</a><a href="<?= e(url('register.php')) ?>" class="btn btn-primary btn-sm">Start free</a></nav>
 </header>
+<div class="kb-flag" aria-hidden="true"></div>
 
 <main>
   <section class="l-hero">
@@ -69,7 +70,7 @@ page_head(
 
   <section class="l-stack">
     <p class="eyebrow">Built with</p>
-    <div class="l-logos"><span>PayPal Orders v2</span><span>PayPal Payouts</span><span>PayPal Webhooks</span><span>Claude (Anthropic)</span><span>AG Grid</span><span>Bryntum Scheduler</span><span>APIMatic-ready OpenAPI</span></div>
+    <div class="l-logos"><span>PayPal Orders v2</span><span>PayPal Payouts</span><span>PayPal Webhooks</span><span>Claude (Anthropic)</span><span>AG Grid</span><span>Bryntum Scheduler</span><a href="<?= e(url('developers/')) ?>">APIMatic SDKs</a></div>
   </section>
 
   <section class="l-final card">

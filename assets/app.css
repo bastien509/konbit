@@ -1,5 +1,5 @@
-/* Konbit. Light: pure white, black and dark-blue text, Haiti blue and red, a touch of yellow, green on hover.
-   Dark: matte near-black, white text, yellow accents, red CTAs. No purple. */
+/* Konbit. Light only: white pages, the Haitian flag blue (#00209F) and red (#D21034), navy text.
+   Its own look (top bar, flag stripe, square cards), separate from the other Petiht apps. No purple. */
 :root {
   --bg: #ffffff;
   --card: #ffffff;
@@ -23,25 +23,6 @@
   --font: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
   color-scheme: light;
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #121212;
-    --card: #1c1c1e;
-    --surface: #232325;
-    --ink: #f5f5f5;
-    --navy: #f5f5f5;
-    --muted: #a1a1aa;
-    --line: #2e2e31;
-    --accent: #f5c518;
-    --accent-soft: rgba(245, 197, 24, .08);
-    --blue: #f5c518;
-    --green: #22c55e;
-    --hover: #22c55e;
-    --hover-soft: rgba(34, 197, 94, .1);
-    --shadow: none;
-    color-scheme: dark;
-  }
 }
 
 * { box-sizing: border-box; }
@@ -85,12 +66,6 @@ p { margin: .35em 0; }
 .chip-s.red { background: rgba(210, 16, 52, .1); color: var(--red); }
 .chip-s.gold { background: rgba(245, 197, 24, .2); color: #8a6a00; }
 .chip-s.blue { background: rgba(0, 32, 159, .08); color: #00209f; }
-@media (prefers-color-scheme: dark) {
-  .chip-s.gold { color: var(--gold); }
-  .chip-s.blue { background: rgba(245, 197, 24, .1); color: var(--gold); }
-  .chip-s.red { color: #ff6b81; }
-  .chip-s.green { color: #3ddc97; }
-}
 .pill { padding: 5px 12px; border-radius: 999px; font-size: 12.5px; font-weight: 700; border: 1px solid var(--line); background: var(--card); white-space: nowrap; }
 .pill-on { color: var(--green); border-color: rgba(15, 157, 88, .35); }
 .pill-warn { color: #8a6a00; border-color: rgba(245, 197, 24, .6); }
@@ -244,7 +219,6 @@ pre { white-space: pre-wrap; word-break: break-word; font: 12.5px/1.55 var(--mon
 .z-auto { background: rgba(15, 157, 88, .1); color: var(--green); }
 .z-ask { background: rgba(245, 197, 24, .18); color: #7a5d00; }
 .z-never { background: rgba(210, 16, 52, .09); color: var(--red); }
-@media (prefers-color-scheme: dark) { .z-ask { color: var(--gold); } }
 .terms { font-size: 13px; }
 #v-mandate .form { margin-bottom: 14px; }
 .code { font-size: 12px; }
@@ -280,7 +254,6 @@ pre { white-space: pre-wrap; word-break: break-word; font: 12.5px/1.55 var(--mon
 .msg { max-width: 92%; padding: 10px 13px; border-radius: 14px; font-size: 14px; }
 .msg.bot { background: var(--bg); border: 1px solid var(--line); border-bottom-left-radius: 4px; }
 .msg.me { justify-self: end; background: var(--accent); color: #fff; border-bottom-right-radius: 4px; }
-@media (prefers-color-scheme: dark) { .msg.me { color: #1a1400; } }
 .msg.err { color: var(--red); }
 .msg .plan, .msg .mini-card { margin: 8px 0 0; padding: 12px; box-shadow: none; }
 .msg .plan h3 { font-size: 14px; }
@@ -414,11 +387,6 @@ pre { background: var(--surface); }
 .plan-sent, .plan-sending, .plan-scheduled { border-left-color: var(--navy); }
 .quote { border-left-color: var(--gold); background: var(--surface); }
 .judge-box { border-color: var(--gold); background: rgba(245, 197, 24, .08); }
-@media (prefers-color-scheme: dark) {
-  .auth-side { background: #1c1c1e; border-right: 1px solid var(--line); }
-  .msg.me { background: var(--surface); color: var(--ink); border: 1px solid var(--line); }
-  .avatar { color: #121212; }
-}
 
 /* ===================================================== premium layer */
 /* Buttons: one height scale, crisp edges, soft depth, green on hover. */
@@ -466,10 +434,6 @@ pre { background: var(--surface); }
 .hb-stat span { font-size: 12px; color: rgba(255, 255, 255, .7); font-weight: 600; }
 .hb-stat b { font-size: 20px; letter-spacing: -.02em; color: #fff; }
 .hb-stat.ok b { color: #86efac; }
-@media (prefers-color-scheme: dark) {
-  .hero-bal { background: linear-gradient(180deg, #1f1f22 0%, #19191b 100%); border: 1px solid var(--line); box-shadow: none; }
-  .hb-amount { color: var(--gold); }
-}
 
 /* Side column cards */
 .cols { grid-template-columns: minmax(0, 1fr) 360px; gap: 24px; }
@@ -484,7 +448,6 @@ pre { background: var(--surface); }
 .zb-auto { background: rgba(21, 128, 61, .12); color: var(--green); }
 .zb-ask { background: rgba(245, 197, 24, .2); color: #7a5d00; }
 .zb-never { background: rgba(210, 16, 52, .1); color: var(--red); }
-@media (prefers-color-scheme: dark) { .zb-ask { color: var(--gold); } }
 .link-row { padding: 12px 0; border-top: 1px solid var(--line); display: grid; gap: 6px; }
 .sc-head + .link-row { border-top: 0; padding-top: 2px; }
 .lr-top { display: flex; align-items: center; gap: 8px; }
@@ -544,3 +507,165 @@ pre { background: var(--surface); }
 .lg.ev-scheduled { background: #00209f; }
 .lg.ev-needs_approval { background: #f5c518; color: #1a1400; }
 .lg.ev-due { background: #6b7280; }
+
+/* ============================================== Konbit identity: Drapo */
+/* Flag colors only for chrome: blue for structure, red for action, white everywhere else.
+   Green and amber appear only as payout status (paid / waiting for a tap). */
+:root {
+  --bg: #ffffff; --card: #ffffff; --surface: #f4f6fb; --ink: #0d1530; --navy: #0d1530; --muted: #4a5470;
+  --line: #dde2ee; --accent: #00209f; --accent-soft: rgba(0, 32, 159, .06); --cta: #d21034;
+  --blue: #00209f; --red: #d21034; --blue-dk: #001670; --red-dk: #a50d29;
+  --hover: #d21034; --hover-soft: rgba(210, 16, 52, .07);
+  --radius: 8px; --shadow: 0 1px 0 rgba(13, 21, 48, .04);
+  --font: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif; --head: "Outfit", "DM Sans", system-ui, sans-serif;
+}
+body { background: #fff; color: var(--ink); }
+h1, h2, h3, .brand, .kpi b, .plan-total, .hb-amount, .pay-amount { font-family: var(--head); letter-spacing: -.015em; }
+
+/* Top bar: Haiti blue with the tabs inside it, the red half of the flag right under it. */
+.kb-bar { position: sticky; top: 0; z-index: 35; background: var(--blue); color: #fff; }
+.kb-bar-in { max-width: 1320px; margin: 0 auto; padding: 0 24px; height: 64px; display: flex; align-items: center; gap: 22px; }
+.kb-bar .brand { color: #fff; font-size: 20px; }
+.kb-bar .logo { width: 32px; height: 32px; border-radius: 6px; box-shadow: 0 0 0 2px #fff; }
+.kb-tabs { flex: 1; display: flex; gap: 2px; align-self: stretch; overflow-x: auto; scrollbar-width: none; }
+.kb-tabs::-webkit-scrollbar { display: none; }
+.kb-tabs button { position: relative; display: flex; align-items: center; gap: 8px; padding: 0 14px; border: 0; background: none; color: rgba(255, 255, 255, .78); font: 600 14px var(--font); cursor: pointer; white-space: nowrap; }
+.kb-tabs button svg { width: 18px; height: 18px; fill: currentColor; flex: none; }
+.kb-tabs button::after { content: ""; position: absolute; left: 10px; right: 10px; bottom: 0; height: 4px; border-radius: 4px 4px 0 0; background: transparent; }
+.kb-tabs button:hover { color: #fff; background: rgba(255, 255, 255, .08); }
+.kb-tabs button.on { color: #fff; }
+.kb-tabs button.on::after { background: #fff; }
+.kb-tabs .nav-badge { margin-left: 2px; background: var(--red); box-shadow: 0 0 0 2px var(--blue); }
+.kb-user { display: flex; align-items: center; gap: 10px; flex: none; }
+.kb-user .avatar { width: 34px; height: 34px; border-radius: 6px; background: #fff; color: var(--blue); }
+.kb-who b { display: block; font-size: 13.5px; line-height: 1.2; }
+.kb-who small { display: block; font-size: 12px; color: rgba(255, 255, 255, .7); }
+.kb-out { border: 1px solid rgba(255, 255, 255, .45); background: none; color: #fff; border-radius: 6px; padding: 6px 10px; font: 600 12.5px var(--font); cursor: pointer; }
+.kb-out:hover { background: var(--red); border-color: var(--red); }
+.kb-flag { height: 6px; background: var(--red); }
+.kb-flag i { display: none; }
+
+/* Page: one centered column, no sidebar. */
+.shell { display: block; min-height: 0; }
+.main { max-width: 1320px; margin: 0 auto; padding: 26px 24px 110px; }
+.top { align-items: flex-end; padding-bottom: 16px; margin-bottom: 22px; border-bottom: 1px solid var(--line); }
+.top > div:first-child { flex: 1; }
+.top h1 { font-size: 30px; font-weight: 800; color: var(--navy); }
+.kb-crumb { margin: 0 0 2px; font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--red); }
+.pill { border-radius: 6px; }
+.pill-sandbox { background: var(--surface); color: var(--blue); border-color: rgba(0, 32, 159, .2); }
+
+/* Cards: square-ish, hairline border, a blue rule on top of side cards. */
+.card { border-radius: var(--radius); box-shadow: none; border-color: var(--line); }
+.side-card { border-top: 3px solid var(--blue); }
+.plan, .event { border-radius: var(--radius); }
+.sec-head h2 { display: flex; align-items: center; gap: 10px; font-size: 17px; }
+.sec-head h2::before { content: ""; width: 6px; height: 18px; border-radius: 2px; background: linear-gradient(var(--blue) 50%, var(--red) 50%); }
+.view-head h2 { font-size: 22px; }
+.eyebrow { color: var(--blue); }
+
+/* Buttons: flag colors only. Red = act, blue outline = secondary; hover darkens or flips. */
+.btn { border-radius: 6px; font-weight: 700; }
+.btn:hover { transform: none; }
+.btn-primary { background: var(--red); border-color: var(--red); box-shadow: none; }
+.btn-primary:hover { background: var(--red-dk); border-color: var(--red-dk); box-shadow: none; }
+.btn-ghost { background: #fff; color: var(--blue); border: 1.5px solid var(--blue); box-shadow: none; }
+.btn-ghost:hover { background: var(--blue); color: #fff; border-color: var(--blue); box-shadow: none; }
+.btn-glass { background: #fff; color: var(--blue); border: 1.5px solid var(--blue); }
+.btn-glass:hover { background: var(--blue); color: #fff; border-color: var(--blue); }
+.btn-paypal { border-radius: 6px; }
+.btn-paypal:hover { background: #ffd160; box-shadow: 0 0 0 2px var(--blue); }
+.btn-sm { border-radius: 6px; }
+.icon-btn { border-radius: 6px; color: var(--blue); }
+.icon-btn:hover { color: #fff; background: var(--blue); border-color: var(--blue); box-shadow: none; }
+.link-btn { color: var(--blue); }
+a:hover, .link-btn:hover { color: var(--red); }
+.chip { border-radius: 6px; color: var(--blue); }
+.chip:hover { border-color: var(--red); color: var(--red); }
+.seg { border-radius: 8px; }
+.seg button { border-radius: 6px; }
+.seg button.on { background: var(--blue); color: #fff; }
+.seg button:hover { color: var(--red); }
+.seg button.on:hover { color: #fff; }
+.chip-s { border-radius: 5px; }
+.btn:focus-visible, .icon-btn:focus-visible, .link-btn:focus-visible, .kb-tabs button:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+input, select, textarea { border-radius: 6px; }
+input:focus, select:focus, textarea:focus { outline: 2px solid var(--blue); }
+
+/* Balance: a white ledger card edged with the flag, not a dark gradient. */
+.hero-bal { color: var(--ink); background: #fff; border: 1px solid var(--line); border-radius: var(--radius); box-shadow: none; padding: 26px 28px 26px 40px; }
+.hero-bal::before { left: 0; top: 0; bottom: 0; right: auto; width: 10px; height: auto; background: linear-gradient(var(--blue) 50%, var(--red) 50%); }
+.hb-label { color: var(--blue); }
+.hb-amount { color: var(--navy); }
+.hb-sub { color: var(--muted); }
+.hb-stat { background: var(--surface); border: 0; border-radius: 6px; border-left: 3px solid var(--blue); }
+.hb-stat span { color: var(--muted); }
+.hb-stat b { color: var(--navy); }
+.hb-stat.ok b { color: var(--green); }
+.hb-stat:nth-child(2) { border-left-color: var(--red); }
+
+.kpi b { color: var(--navy); }
+.meter i { background: linear-gradient(90deg, var(--blue), var(--red)); }
+.quote { border-left-color: var(--blue); }
+.plan-needs_approval { border-left-color: var(--red); }
+.plan-sent, .plan-sending, .plan-scheduled { border-left-color: var(--blue); }
+.tour { border: 1px solid var(--line); border-top: 4px solid var(--blue); border-radius: var(--radius); }
+.tour-bar { border-left: 4px solid var(--red); border-radius: 6px; }
+.tour-ring { background: conic-gradient(var(--red) calc(var(--p) * 1%), var(--accent-soft) 0); }
+.tstep { border-radius: 6px; }
+.tstep:not(.done):hover { border-color: var(--blue); box-shadow: none; }
+.tstep.done i { background: var(--blue); }
+.judge-box { border: 1px dashed var(--blue); background: var(--accent-soft); border-radius: 6px; }
+.sample { border-radius: var(--radius); }
+.sample:hover { transform: none; border-color: var(--blue); box-shadow: inset 4px 0 0 var(--blue); }
+.sample i, .src, .er-icon { border-radius: 6px; }
+.zone, .zone-bar { border-radius: 6px; }
+.z-ask, .zb-ask { background: rgba(0, 32, 159, .07); color: var(--blue); }
+.crew-top input:hover { border-color: var(--blue); }
+.scheduler-box, .grid-box { border-radius: var(--radius); }
+.code.key { border-color: var(--red); }
+
+/* Agent: a blue tab docked at the bottom right, not a floating pill. */
+.agent-fab { right: 24px; bottom: 0; height: 48px; border-radius: 8px 8px 0 0; padding: 0 20px; background: var(--blue); box-shadow: inset 0 -3px 0 var(--red), 0 -6px 20px rgba(0, 32, 159, .18); font-family: var(--font); }
+.agent-fab:hover { background: var(--blue-dk); box-shadow: inset 0 -5px 0 var(--red); }
+.agent-panel { bottom: 0; border-radius: 8px 8px 0 0; border-top: 4px solid var(--blue); box-shadow: 0 -10px 40px rgba(13, 21, 48, .18); }
+.agent-panel header { background: var(--surface); }
+.msg { border-radius: 8px; }
+.msg.me { background: var(--blue); }
+.toast { border-radius: 6px; background: var(--navy); }
+
+/* Sign-in: white form, the flag as the left panel. */
+.auth-side { background: var(--blue); position: relative; overflow: hidden; }
+.auth-side { padding-bottom: calc(22vh + 48px); }
+.auth-side::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 22vh; background: var(--red); }
+.auth-side h2, .auth-side .brand { color: #fff; }
+.auth-side > * { position: relative; z-index: 1; }
+.auth-side .logo { box-shadow: 0 0 0 2px #fff; border-radius: 6px; }
+.auth-points b { background: #fff; color: var(--blue); border-radius: 6px; }
+.auth-card { border-top: 4px solid var(--blue); }
+
+/* Client pay page */
+.pay-page { background: #fff; border-top: 8px solid var(--blue); }
+.pay-card { border-top: 4px solid var(--red); }
+
+@media (max-width: 1560px) {
+  .kb-who { display: none; }
+  .kb-bar-in { gap: 16px; }
+  .kb-tabs button { padding: 0 11px; }
+}
+@media (max-width: 1180px) and (min-width: 821px) {
+  .kb-tabs button svg { display: none; }
+}
+@media (max-width: 820px) {
+  .kb-bar-in { height: auto; flex-wrap: wrap; gap: 0 12px; padding: 10px 16px 0; }
+  .kb-bar .brand { flex: 1; }
+  .kb-tabs { order: 3; flex: 1 1 100%; margin: 6px -16px 0; padding: 0 8px; height: 48px; }
+  .kb-tabs button { padding: 0 12px; font-size: 13.5px; }
+  .main { padding: 18px 16px 100px; }
+  .top { flex-wrap: wrap; }
+  .top > div:first-child { flex: 1 1 100%; }
+  .top h1 { font-size: 24px; }
+  .agent-fab { right: 16px; height: 46px; }
+  .agent-panel { left: 0; right: 0; width: auto; height: calc(100vh - 40px); }
+  .hero-bal { padding: 22px 18px 22px 28px; }
+}

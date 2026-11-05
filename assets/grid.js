@@ -8,15 +8,11 @@
   if (agGrid.ModuleRegistry && agGrid.AllCommunityModule) {
     agGrid.ModuleRegistry.registerModules([agGrid.AllCommunityModule]);
   }
-  var dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-  var theme = agGrid.themeQuartz.withParams(dark ? {
-    browserColorScheme: 'dark', backgroundColor: '#1c1c1e', foregroundColor: '#f5f5f5', headerBackgroundColor: '#232325',
-    headerTextColor: '#F5C518', accentColor: '#F5C518', borderColor: '#2e2e31', rowHoverColor: 'rgba(34,197,94,.08)',
-    fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif', fontSize: 13, headerFontWeight: 700, wrapperBorderRadius: 14
-  } : {
-    browserColorScheme: 'light', backgroundColor: '#ffffff', foregroundColor: '#0a0a0a', headerBackgroundColor: '#f6f7f9',
-    headerTextColor: '#0b1f4d', accentColor: '#00209F', borderColor: '#e5e7eb', rowHoverColor: 'rgba(22,163,74,.06)',
-    fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif', fontSize: 13, headerFontWeight: 700, wrapperBorderRadius: 14
+  // Konbit is light only: white grid, Haiti-blue header, red accent on hover.
+  var theme = agGrid.themeQuartz.withParams({
+    browserColorScheme: 'light', backgroundColor: '#ffffff', foregroundColor: '#0d1530', headerBackgroundColor: '#00209F',
+    headerTextColor: '#ffffff', accentColor: '#00209F', borderColor: '#dde2ee', rowHoverColor: 'rgba(0,32,159,.05)',
+    fontFamily: '"DM Sans", system-ui, sans-serif', fontSize: 13, headerFontWeight: 700, wrapperBorderRadius: 6
   });
 
   var tab = 'items';
