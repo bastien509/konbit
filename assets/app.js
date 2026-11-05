@@ -258,6 +258,15 @@
       '</article>';
   }
 
+  var ICON = {
+    copy: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 1H6a2 2 0 0 0-2 2v12h2V3h10V1Zm3 4H10a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2Zm0 16h-9V7h9v14Z"/></svg>',
+    out: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3v2h3.6l-9.8 9.8 1.4 1.4L19 6.4V10h2V3h-7ZM19 19H5V5h7V3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7h-2v7Z"/></svg>',
+    arrow: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4 10.6 5.4 16.2 11H4v2h12.2l-5.6 5.6L12 20l8-8-8-8Z"/></svg>',
+    inbox: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Zm0 12h-4a3 3 0 0 1-6 0H5V5h14v10Z"/></svg>',
+    check: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg>',
+    shield: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1 3 5v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V5l-9-4Zm-1.2 15.5L7 12.7l1.4-1.4 2.4 2.4 5.8-5.8L18 9.3l-7.2 7.2Z"/></svg>'
+  };
+
   function renderOverview() {
     var el = $('#v-overview');
     var ws = S.workspace;
@@ -267,43 +276,65 @@
       return;
     }
     var t = totals();
-    var tourTop = tourVisible() ? tourCard() : '';
     var tap = S.plans.filter(function (p) { return p.status === 'needs_approval'; });
     var recent = S.plans.filter(function (p) { return p.status !== 'needs_approval'; }).slice(0, 4);
     var m = ws.mandate;
-    var kpi = function (label, val, sub, cls) { return '<div class="kpi card ' + (cls || '') + '"><span>' + esc(label) + '</span><b>' + val + '</b><small>' + esc(sub) + '</small></div>'; };
-    var html = tourTop + '<div class="kpis">' +
-      kpi('Received from clients', money(t.received), S.requests.some(function (r) { return r.seeded; }) ? 'Includes seeded demo funds' : 'Captured with PayPal') +
-      kpi('Paid to crew', money(t.paid), 'PayPal Payouts', 'kpi-green') +
-      kpi('Free to pay out', money(t.available), 'After reserve and holds', 'kpi-blue') +
-      kpi('Tax & fee reserve', money(t.reserve), 'Never paid out') +
-      '</div>';
+    var seeded = S.requests.some(function (r) { return r.seeded; });
+    var stat = function (label, val, cls) { return '<div class="hb-stat ' + (cls || '') + '"><span>' + esc(label) + '</span><b>' + val + '</b></div>'; };
+
+    // Balance panel: the one number that matters, then where the money is.
+    var html = '<section class="hero-bal">' +
+      '<div class="hb-main"><p class="hb-label">Free to pay your crew</p><div class="hb-amount">' + money(t.available) + '</div>' +
+      '<p class="hb-sub">' + money(t.received) + ' received from clients' + (seeded ? ' (seeded demo funds)' : '') + ' · ' + money(t.reserve) + ' held for tax &amp; fees</p>' +
+      '<div class="hb-acts">' + (tap.length
+        ? '<button class="btn btn-primary" type="button" data-go="payouts">' + ICON.shield + 'Review ' + tap.length + ' payout' + (tap.length > 1 ? 's' : '') + '</button>'
+        : '<button class="btn btn-primary" type="button" data-go="inbox">' + ICON.inbox + 'Send work proof</button>') +
+      '<button class="btn btn-glass" type="button" data-go="inbox">Work inbox ' + ICON.arrow + '</button></div></div>' +
+      '<div class="hb-stats">' + stat('Paid to crew', money(t.paid), 'ok') + stat('Sending now', money(t.held)) + stat('Tax reserve', money(t.reserve)) + stat('Received', money(t.received)) + '</div>' +
+      '</section>';
+
+    html += tourVisible() ? tourCard() : '';
+
     html += '<div class="cols"><div class="col-main">';
     html += '<div class="sec-head"><h2>Needs your tap</h2>' + (tap.length ? chip(tap.length + ' waiting', 'gold') : '') + '</div>';
-    html += tap.length ? tap.slice(0, 3).map(function (p) { return planCard(p, true); }).join('') + (tap.length > 3 ? '<button class="btn btn-ghost" data-go="payouts">See all ' + tap.length + '</button>' : '')
-      : '<div class="card calm"><b>All clear.</b><span class="muted">The agent pays small, proven payouts on its own and puts the rest here.</span></div>';
-    html += '<div class="sec-head"><h2>Latest payouts</h2><button class="link-btn" data-go="payouts">All payouts</button></div>';
-    html += recent.length ? recent.map(function (p) { return planCard(p, true); }).join('') : '<p class="muted">No payouts yet. Pay a client link, then send the agent some work evidence from the Work inbox.</p>';
-    html += '</div><div class="col-side">';
-    html += '<div class="card mandate-mini"><p class="eyebrow">Mandate</p>' + (m ?
-      '<h3>' + (m.status === 'active' ? 'Agent may auto-pay under ' + money(m.auto_below_cents) : 'Paused: you approve everything') + '</h3>' +
-      meter(m.used_30d_cents, m.month_cap_cents, 'used in 30 days') +
-      '<p class="muted small">Max ' + money(m.max_payout_cents) + ' per payout · ' + money(m.max_recipient_month_cents) + ' per person / 30 days</p><button class="link-btn" data-go="mandate">Change limits</button>'
-      : '<h3>No mandate yet</h3><p class="muted small">Without one, every payout waits for you.</p><button class="btn btn-primary" data-go="mandate">Sign a mandate</button>') + '</div>';
-    html += '<div class="sec-head"><h2>Client payment links</h2></div>';
+    html += tap.length ? tap.slice(0, 3).map(function (p) { return planCard(p, true); }).join('') + (tap.length > 3 ? '<button class="btn btn-ghost" type="button" data-go="payouts">See all ' + tap.length + '</button>' : '')
+      : '<div class="card empty-row"><i class="er-icon ok">' + ICON.check + '</i><div><b>All clear</b><span>Small, proven payouts go out on their own. Anything bigger lands here for one tap.</span></div></div>';
+    html += '<div class="sec-head"><h2>Latest payouts</h2><button class="link-btn" type="button" data-go="payouts">All payouts</button></div>';
+    html += recent.length ? recent.map(function (p) { return planCard(p, true); }).join('')
+      : '<div class="card empty-row"><i class="er-icon">' + ICON.inbox + '</i><div><b>No payouts yet</b><span>Send the agent proof of work, like an approval email or a merged pull request, and watch it pay the right person.</span></div>' +
+        '<button class="btn btn-ghost btn-sm" type="button" data-go="inbox">Open Work inbox</button></div>';
+    html += '</div><aside class="col-side">';
+
+    // Mandate summary with the three zones.
+    html += '<section class="card side-card"><div class="sc-head"><p class="eyebrow">Mandate</p>' + (m ? chip(m.status === 'active' ? 'Active' : 'Paused', m.status === 'active' ? 'green' : 'gold') : chip('None', 'red')) + '</div>' + (m
+      ? '<h3>' + (m.status === 'active' ? 'Auto-pays under ' + money(m.auto_below_cents) : 'You approve every payout') + '</h3>' +
+        '<div class="zone-bar"><span class="zb-auto">Auto &lt; ' + money(m.auto_below_cents) + '</span><span class="zb-ask">Ask ≤ ' + money(m.max_payout_cents) + '</span><span class="zb-never">Never</span></div>' +
+        meter(m.used_30d_cents, m.month_cap_cents, 'used in 30 days') +
+        '<button class="btn btn-ghost btn-sm btn-block" type="button" data-go="mandate">View limits</button>'
+      : '<h3>No mandate yet</h3><p class="muted small">Without one, every payout waits for you.</p><button class="btn btn-primary btn-sm btn-block" type="button" data-go="mandate">Sign a mandate</button>') + '</section>';
+
+    // Client payment links: one list card, actions on their own line so nothing wraps.
+    html += '<section class="card side-card"><div class="sc-head"><p class="eyebrow">Client payment links</p><button class="link-btn" type="button" data-go="crew">New link</button></div>';
     html += S.requests.slice(0, 5).map(function (r) {
       var paid = r.status === 'completed';
-      return '<div class="card req"><div><b>' + money(r.amount_cents) + '</b> ' + chip(r.seeded ? 'Demo funds' : paid ? 'Paid' : r.status === 'pending' ? 'Pending' : 'Open', paid ? 'green' : 'muted') +
-        '<p class="small">' + esc(r.project) + (r.memo ? ' · ' + esc(r.memo) : '') + '</p></div>' +
-        (paid ? '<span class="muted small">' + esc(ago(r.paid_at)) + '</span>' : '<div class="req-acts"><a class="btn btn-paypal btn-sm" href="' + esc(r.url) + '" target="_blank" rel="noopener">Open pay page</a><button class="icon-btn" data-copy="' + esc(r.url) + '" title="Copy link">⧉</button></div>') + '</div>';
+      var st = r.seeded ? ['Demo funds', 'green'] : paid ? ['Paid', 'green'] : r.status === 'pending' ? ['Pending', 'gold'] : ['Open', 'blue'];
+      return '<div class="link-row"><div class="lr-top"><b>' + money(r.amount_cents) + '</b>' + chip(st[0], st[1]) + (paid ? '<span class="lr-when">' + esc(ago(r.paid_at)) + '</span>' : '') + '</div>' +
+        '<p class="lr-memo"><span>' + esc(r.project) + '</span>' + (r.memo ? esc(r.memo) : '') + '</p>' +
+        (paid ? '' : '<div class="lr-acts"><a class="btn btn-paypal btn-sm" href="' + esc(r.url) + '" target="_blank" rel="noopener">Pay with <b>PayPal</b>' + ICON.out + '</a><button class="icon-btn" type="button" data-copy="' + esc(r.url) + '" title="Copy link" aria-label="Copy payment link">' + ICON.copy + '</button></div>') +
+        '</div>';
     }).join('') || '<p class="muted small">Create one in Crew &amp; projects or ask the agent.</p>';
-    html += '<div class="sec-head"><h2>Projects</h2></div>';
+    html += '</section>';
+
+    // Projects with a clear paid / payable bar.
+    html += '<section class="card side-card"><div class="sc-head"><p class="eyebrow">Projects</p><button class="link-btn" type="button" data-go="crew">Manage</button></div>';
     html += ws.projects.map(function (p) {
-      return '<div class="card proj-mini"><b>' + esc(p.name) + '</b><span class="muted small">' + esc(p.client) + '</span>' +
-        meter(p.paid_out_cents + p.held_cents, Math.max(1, p.received_cents - p.reserve_cents), 'paid of ' + money(p.received_cents - p.reserve_cents) + ' payable') +
-        '<span class="small">Free now: <b>' + money(p.available_cents) + '</b></span></div>';
+      var payable = Math.max(0, p.received_cents - p.reserve_cents);
+      var pct = payable ? Math.min(100, Math.round((p.paid_out_cents + p.held_cents) / payable * 100)) : 0;
+      return '<div class="proj-row"><div class="pr-top"><b>' + esc(p.name) + '</b><span>' + money(p.available_cents) + ' free</span></div>' +
+        '<p class="pr-client">' + esc(p.client) + '</p><div class="meter"><i style="width:' + pct + '%"></i></div>' +
+        '<p class="pr-nums"><span>' + money(p.paid_out_cents + p.held_cents) + ' paid</span><span>' + money(payable) + ' payable</span></p></div>';
     }).join('');
-    html += '</div></div>';
+    html += '</section></aside></div>';
     el.innerHTML = html;
   }
 

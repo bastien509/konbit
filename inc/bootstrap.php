@@ -40,7 +40,7 @@ $GLOBALS['FA_CFG'] = (static function (): array {
     return require $file;
 })();
 
-const FA_ASSET_VER = '3';
+const FA_ASSET_VER = '4';
 const FA_CREW_COLORS = ['#00209F', '#D21034', '#E0A800', '#0F9D58', '#00838F', '#E8590C', '#1565C0', '#AD1457'];
 
 /** User-facing error: the message is safe to show. Anything else becomes a generic error. */
@@ -222,7 +222,7 @@ function send_security_headers(): void
     // The app page hosts AG Grid and Bryntum Scheduler, which set element styles at runtime.
     $appPage = defined('FA_APP_PAGE');
     header(
-        "Content-Security-Policy: default-src 'self'; img-src 'self' data:; "
+        "Content-Security-Policy: default-src 'self'; img-src 'self' data:" . ($appPage ? ' https://bryntum.com' : '') . "; "
         . "style-src 'self'" . ($appPage ? " 'unsafe-inline'" : '') . ' https://fonts.googleapis.com; '
         . "font-src 'self' data: https://fonts.gstatic.com; "
         . "script-src 'self'" . ($appPage ? " 'unsafe-eval'" : '') . "; connect-src 'self'; "
