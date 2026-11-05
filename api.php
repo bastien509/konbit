@@ -296,12 +296,14 @@ try {
                  WHERE p.owner_id = ? AND p.status <> 'rejected' AND p.created_at > NOW() - INTERVAL 60 DAY",
                 [$uid]
             )->fetchAll() as $r) {
-                $start = $r['pay_on'] ? $r['pay_on'] . 'T09:00:00Z' : ($r['approved_at'] ?: $r['created_at']) . 'Z';
+                // One full-day bar per payout, on its pay day (or the day it was sent).
+                $start = ($r['pay_on'] ?: substr((string) ($r['approved_at'] ?: $r['created_at']), 0, 10)) . 'T00:00:00';
                 $movable = in_array($r['status'], ['needs_approval', 'scheduled'], true);
                 $events[] = [
                     'id' => 'i' . $r['id'], 'resourceId' => (int) $r['crew_id'], 'name' => money((int) $r['amount_cents']) . ' · ' . $r['title'],
-                    'startDate' => str_replace(' ', 'T', $start), 'duration' => 6, 'durationUnit' => 'h',
-                    'planId' => (int) $r['plan_id'], 'status' => $r['status'], 'itemStatus' => $r['istatus'], 'project' => $r['project'], 'kind' => $r['kind'],
+                    'startDate' => $start, 'duration' => 1, 'durationUnit' => 'd',
+                    'planId' => (int) $r['plan_id'], 'status' => $r['status'], 'itemStatus' => $r['istatus'], 'projectName' => $r['project'], 'kind' => $r['kind'],
+                    'amount' => money((int) $r['amount_cents']),
                     'draggable' => $movable, 'resizable' => false, 'cls' => 'ev-' . $r['status'],
                 ];
             }
@@ -312,7 +314,8 @@ try {
             )->fetchAll() as $m) {
                 $events[] = [
                     'id' => 'm' . $m['id'], 'resourceId' => (int) $m['crew_id'], 'name' => 'Due: ' . $m['title'] . ' (' . money((int) $m['amount_cents']) . ')',
-                    'startDate' => $m['due_on'] . 'T00:00:00Z', 'duration' => 1, 'durationUnit' => 'd', 'status' => 'due', 'project' => $m['project'],
+                    'startDate' => $m['due_on'] . 'T00:00:00', 'duration' => 1, 'durationUnit' => 'd', 'status' => 'due', 'projectName' => $m['project'],
+                    'amount' => money((int) $m['amount_cents']),
                     'draggable' => false, 'resizable' => false, 'cls' => 'ev-due',
                 ];
             }

@@ -21,10 +21,10 @@
   function build(data) {
     var B = window.bryntum.scheduler;
     var start = new Date();
-    start.setDate(start.getDate() - 10);
+    start.setDate(start.getDate() - 1);
     start.setHours(0, 0, 0, 0);
     var end = new Date(start);
-    end.setDate(end.getDate() + 35);
+    end.setDate(end.getDate() + 6);
     data.events.forEach(function (ev) {
       ev.eventColor = COLORS[ev.status] || 'gray';
       ev.startDate = new Date(ev.startDate);
@@ -33,10 +33,10 @@
       appendTo: 'scheduler',
       startDate: start,
       endDate: end,
-      viewPreset: 'weekAndDayLetter',
-      rowHeight: 56,
-      barMargin: 6,
-      eventStyle: 'rounded',
+      viewPreset: 'weekAndDay',
+      rowHeight: 64,
+      barMargin: 10,
+      eventStyle: 'plain',
       resourceImagePath: null,
       columns: [{
         type: 'resourceInfo', text: 'Crew', width: 200, showEventCount: false, showImage: false,
@@ -55,14 +55,16 @@
         eventTooltip: {
           template: function (o) {
             var r = o.eventRecord;
-            return '<div class="b-tip"><b>' + K().esc(r.name) + '</b><br>' + K().esc(r.project || '') + '<br>' + K().esc(STATUS[r.status] || r.status) +
+            return '<div class="b-tip"><b>' + K().esc(r.name) + '</b><br>' + K().esc(r.projectName || '') + '<br>' + K().esc(STATUS[r.status] || r.status) +
               (r.draggable ? '<br><i>Drag to another day to move the pay day.</i>' : '') + '</div>';
           }
         }
       },
       eventRenderer: function (o) {
-        o.renderData.cls.add('ev-' + o.eventRecord.status);
-        return K().esc(o.eventRecord.name);
+        var r = o.eventRecord;
+        o.renderData.cls.add('ev-' + r.status);
+        // Short label on the bar; the tooltip has the full title.
+        return K().esc((r.amount || '') + ' · ' + (STATUS[r.status] || r.status));
       },
       listeners: {
         beforeEventDropFinalize: function (o) {

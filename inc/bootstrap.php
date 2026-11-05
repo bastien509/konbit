@@ -40,7 +40,7 @@ $GLOBALS['FA_CFG'] = (static function (): array {
     return require $file;
 })();
 
-const FA_ASSET_VER = '4';
+const FA_ASSET_VER = '5';
 const FA_CREW_COLORS = ['#00209F', '#D21034', '#E0A800', '#0F9D58', '#00838F', '#E8590C', '#1565C0', '#AD1457'];
 
 /** User-facing error: the message is safe to show. Anything else becomes a generic error. */

@@ -529,3 +529,18 @@ pre { background: var(--surface); }
   .empty-row { flex-wrap: wrap; }
   .plan footer .btn-primary { min-width: 0; flex: 1; }
 }
+
+/* Bryntum bars: solid status colors with white labels, so they read on video and in light/dark. */
+#scheduler .b-sch-event { border: 0 !important; border-radius: 9px !important; color: #fff !important; font-weight: 700; font-size: 13px; padding: 0 10px; box-shadow: 0 2px 6px rgba(0, 0, 0, .12); }
+#scheduler .b-sch-event.ev-paid, #scheduler .b-sch-event.ev-partial { background: #16a34a !important; }
+#scheduler .b-sch-event.ev-sent, #scheduler .b-sch-event.ev-sending { background: #2563eb !important; }
+#scheduler .b-sch-event.ev-scheduled { background: #00209f !important; }
+#scheduler .b-sch-event.ev-needs_approval { background: #f5c518 !important; color: #1a1400 !important; }
+#scheduler .b-sch-event.ev-blocked, #scheduler .b-sch-event.ev-failed { background: #d21034 !important; }
+#scheduler .b-sch-event.ev-due { background: #6b7280 !important; }
+#scheduler .b-sch-event:hover { box-shadow: 0 0 0 3px rgba(22, 163, 74, .35); }
+.lg.ev-paid { background: #16a34a; }
+.lg.ev-sent { background: #2563eb; }
+.lg.ev-scheduled { background: #00209f; }
+.lg.ev-needs_approval { background: #f5c518; color: #1a1400; }
+.lg.ev-due { background: #6b7280; }
