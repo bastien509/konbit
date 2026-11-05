@@ -29,5 +29,5 @@ function auth_shell_open(string $title, string $heading, string $sub): void
 function auth_shell_close(): void
 {
     echo "  </section>\n</main>\n";
-    page_foot([]);
+    page_foot(['auth.js']);
 }

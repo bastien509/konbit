@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 defined('FA') || exit;
 
+const DEMO_USERNAME = 'demo';
+
 const SAMPLE_EVIDENCE = [
     'github' => [
         'title' => 'Pull request #42 merged',
@@ -28,7 +30,7 @@ const SAMPLE_EVIDENCE = [
 ];
 
 /** Creates the demo crew, two projects, milestones, splits, a mandate and two payment requests. */
-function demo_seed(int $uid): array
+function demo_seed(int $uid, bool $fund = false): array
 {
     $have = (int) q("SELECT COUNT(*) FROM fa_projects WHERE owner_id = ? AND status = 'active'", [$uid])->fetchColumn();
     if ($have > 0) {
@@ -64,8 +66,57 @@ function demo_seed(int $uid): array
     mandate_create($uid, 15000, 40000, 80000, 200000, 30);
     $bakery = project_owned($uid, $ids['bakery']);
     $podcast = project_owned($uid, $ids['podcast']);
-    payment_request_create($uid, $bakery, 60000, 'Deposit: logo, landing page and copy');
-    payment_request_create($uid, $podcast, 40000, 'October episodes (4)');
-    agent_log($uid, 'owner', 'demo_loaded', ['projects' => 2, 'crew' => 3]);
+    if ($fund) {
+        // The judge account starts with client money in, so payouts work without a sandbox buyer.
+        demo_fund($uid, $bakery, 60000, 'Deposit: logo, landing page and copy');
+        demo_fund($uid, $podcast, 40000, 'October episodes (4)');
+        payment_request_create($uid, $bakery, 25000, 'Phase 2 deposit: online ordering');
+        payment_request_create($uid, $podcast, 30000, 'November episodes (3)');
+    } else {
+        payment_request_create($uid, $bakery, 60000, 'Deposit: logo, landing page and copy');
+        payment_request_create($uid, $podcast, 40000, 'October episodes (4)');
+    }
+    agent_log($uid, 'owner', 'demo_loaded', ['projects' => 2, 'crew' => 3, 'funded' => $fund]);
     return $ids;
+}
+
+/** Credits a starting client payment that is clearly marked as seeded (not a PayPal capture). */
+function demo_fund(int $uid, array $project, int $cents, string $memo): void
+{
+    $req = payment_request_create($uid, $project, $cents, $memo);
+    $id = (int) q('SELECT id FROM fa_client_payments WHERE pay_token = ?', [$req['token']])->fetchColumn();
+    client_payment_credit($id, [
+        'id' => 'DEMO-SEED-' . $id, 'status' => 'COMPLETED',
+        'amount' => ['value' => number_format($cents / 100, 2, '.', ''), 'currency_code' => $project['currency']],
+    ]);
+}
+
+/** The shared judge account: its email field holds the username "demo". */
+function demo_is(array $user): bool
+{
+    return $user['email'] === DEMO_USERNAME;
+}
+
+/** Wipes one workspace and loads a fresh, funded demo. Only for the judge account. */
+function demo_reset(int $uid): void
+{
+    tx(function (PDO $pdo) use ($uid) {
+        $sql = [
+            'DELETE i FROM fa_plan_items i JOIN fa_plans p ON p.id = i.plan_id WHERE p.owner_id = ?',
+            'DELETE FROM fa_plans WHERE owner_id = ?',
+            'DELETE FROM fa_ledger WHERE owner_id = ?',
+            'DELETE FROM fa_events WHERE owner_id = ?',
+            'DELETE FROM fa_client_payments WHERE owner_id = ?',
+            'DELETE m FROM fa_milestones m JOIN fa_projects p ON p.id = m.project_id WHERE p.owner_id = ?',
+            'DELETE s FROM fa_splits s JOIN fa_projects p ON p.id = s.project_id WHERE p.owner_id = ?',
+            'DELETE FROM fa_projects WHERE owner_id = ?',
+            'DELETE FROM fa_crew WHERE owner_id = ?',
+            'DELETE FROM fa_mandates WHERE owner_id = ?',
+            'DELETE FROM fa_agent_log WHERE owner_id = ?',
+        ];
+        foreach ($sql as $s) {
+            $pdo->prepare($s)->execute([$uid]);
+        }
+    });
+    demo_seed($uid, true);
 }

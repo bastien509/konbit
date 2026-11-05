@@ -31,9 +31,14 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
 
 auth_shell_open('Sign in', 'Welcome back', 'Sign in to pay your crew.');
 ?>
+    <div class="judge-box">
+      <b>PayPal AI Hackathon judges</b>
+      <span>Username <code>demo</code> · password <code>Demo509</code>. The workspace is ready with client money in. A guided tour takes about 3 minutes, and you can reset the demo at any time.</span>
+      <button class="btn btn-ghost btn-sm" type="button" data-fill-demo>Fill in the demo login</button>
+    </div>
     <form method="post" class="form" autocomplete="on">
       <?= csrf_field() ?>
-      <label>Email<input type="email" name="email" required maxlength="190" value="<?= e($email) ?>" autocomplete="email"></label>
+      <label>Email or username<input name="email" required maxlength="190" value="<?= e($email) ?>" autocomplete="username" autocapitalize="none" spellcheck="false"></label>
       <label>Password<input type="password" name="password" required maxlength="200" autocomplete="current-password"></label>
       <button class="btn btn-primary btn-block" type="submit">Sign in</button>
     </form>

@@ -113,6 +113,7 @@
     $('#viewTitle').textContent = TITLES[v];
     window.scrollTo(0, 0);
     try { sessionStorage.setItem('konbit-view', v); } catch (e) { /* private mode */ }
+    if (['schedule', 'ledger', 'mandate'].indexOf(v) >= 0) tourFlag(v, true);
     document.dispatchEvent(new CustomEvent('konbit:view', { detail: v }));
     if (S) render();
   }
@@ -133,6 +134,86 @@
     if (view === 'payouts') renderPayouts();
     if (view === 'crew') renderCrew();
     if (view === 'mandate') renderMandate();
+    renderTourBar();
+  }
+
+  /* ------------------------------------------------------------- tour */
+
+  // A guided checklist for judges and first-time users. Progress comes from real data where possible.
+  function tourFlag(k, set) {
+    try {
+      if (set) localStorage.setItem('konbit-tour-' + k, '1');
+      return localStorage.getItem('konbit-tour-' + k) === '1';
+    } catch (e) { return false; }
+  }
+  function tourSteps() {
+    var ev = function (src, status) { return S.events.some(function (e) { return (!src || e.source === src) && (!status || e.status === status); }); };
+    var received = S.workspace.projects.reduce(function (a, p) { return a + p.received_cents; }, 0);
+    return [
+      { id: 'money', title: 'Client money is in', done: received > 0, view: 'overview',
+        text: 'Clients paid ' + money(received) + ' for two projects. A tax reserve is held back, and only the rest can ever reach the crew.' },
+      { id: 'auto', title: 'Send the agent proof of work', done: ev('calendar', 'done') || ev('email', 'done'), view: 'inbox', target: '[data-key="calendar"]',
+        text: 'In Work inbox, tap Calendar ("copy approved"). Claude matches it to Lucie\'s $80 milestone. That is under the $150 auto-pay limit, so PayPal Payouts pays her by itself.' },
+      { id: 'ask', title: 'Approve a bigger payout', done: S.plans.some(function (p) { return p.approved_by === 'owner'; }), view: 'inbox', target: '[data-key="github"]',
+        text: 'Tap GitHub ("PR #42 merged"). Jean\'s $250 is above the auto-pay limit, so it waits in Payouts. Open Payouts and press Approve & pay.' },
+      { id: 'trick', title: 'Try to trick the agent', done: ev(null, 'flagged'), view: 'inbox', target: '[data-key="phishing"]',
+        text: 'Tap "URGENT: new PayPal for Jean". It asks for a new PayPal address and a $900 bonus. Watch it get flagged with nothing paid.' },
+      { id: 'chat', title: 'Ask Konbit in plain words', done: tourFlag('chat'), view: 'chat',
+        text: 'Open Ask Konbit (bottom right) and try "Who is still owed money?" or "Create a $250 payment link for the bakery".' },
+      { id: 'views', title: 'See every cent', done: tourFlag('schedule') && tourFlag('ledger'), view: tourFlag('schedule') ? 'ledger' : 'schedule',
+        text: 'Schedule (Bryntum) shows each person\'s payouts on a timeline; drag a waiting one to another day. Ledger (AG Grid) shows every PayPal status and every agent decision.' },
+      { id: 'rules', title: 'Read the mandate', done: tourFlag('mandate'), view: 'mandate',
+        text: 'The one rule set the agent obeys: Auto, Ask and Never. Pause it and every payout needs your tap.' },
+      { id: 'paypal', title: 'Optional: pay a client link yourself', optional: true, view: 'overview', target: '.req .btn-paypal',
+        done: S.requests.some(function (r) { return r.status === 'completed' && !r.seeded; }),
+        text: 'Open a client payment link and pay with any PayPal sandbox personal account. The project fills up and the podcast\'s split is planned.' }
+    ];
+  }
+  function tourVisible() {
+    if (!S.workspace.projects.length) return false;
+    return S.me.is_demo || !tourFlag('hidden');
+  }
+  function tourGo(step) {
+    if (!step) return;
+    if (step.view === 'chat') { openAgent(true); return; }
+    setView(step.view);
+    if (step.target) {
+      setTimeout(function () {
+        var el = document.querySelector(step.target);
+        if (!el) return;
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.classList.add('pulse');
+        setTimeout(function () { el.classList.remove('pulse'); }, 4000);
+      }, 120);
+    }
+  }
+  function renderTourBar() {
+    var bar = $('#tourBar');
+    if (!bar) return;
+    if (!tourVisible() || view === 'overview') { bar.hidden = true; return; }
+    var steps = tourSteps().filter(function (s) { return !s.optional; });
+    var next = steps.filter(function (s) { return !s.done; })[0];
+    var done = steps.filter(function (s) { return s.done; }).length;
+    bar.hidden = false;
+    bar.innerHTML = next
+      ? '<span class="tour-count">Tour ' + done + '/' + steps.length + '</span><span class="tour-next"><b>Next:</b> ' + esc(next.title) + '</span><button class="btn btn-primary btn-sm" type="button" data-tour="' + next.id + '">Show me</button><button class="link-btn" type="button" data-go="overview">All steps</button>'
+      : '<span class="tour-count">Tour done</span><span class="tour-next">You have seen the whole flow. Reset the demo from Overview to start again.</span>';
+  }
+  function tourCard() {
+    var steps = tourSteps();
+    var req = steps.filter(function (s) { return !s.optional; });
+    var done = req.filter(function (s) { return s.done; }).length;
+    var nextId = (req.filter(function (s) { return !s.done; })[0] || {}).id;
+    var list = steps.map(function (s, i) {
+      return '<li class="tstep' + (s.done ? ' done' : '') + (s.id === nextId ? ' next' : '') + '"><i>' + (s.done ? '✓' : (s.optional ? '+' : i + 1)) + '</i><div><b>' + esc(s.title) + '</b><span>' + esc(s.text) + '</span></div>' +
+        (s.done || s.id === 'money' ? '' : '<button class="btn ' + (s.id === nextId ? 'btn-primary' : 'btn-ghost') + ' btn-sm" type="button" data-tour="' + s.id + '">Show me</button>') + '</li>';
+    }).join('');
+    return '<section class="card tour"><header><div><p class="eyebrow">' + (S.me.is_demo ? 'Judge tour · about 3 minutes' : 'Getting started') + '</p><h2>' +
+      (done === req.length ? 'You have seen the whole flow' : 'See Konbit pay a crew, safely') + '</h2>' +
+      '<p class="muted small">Konbit pays a freelancer\'s crew with PayPal Payouts when work is proven, but only inside the mandate the freelancer signed. PayPal sandbox: test money only.</p></div>' +
+      '<div class="tour-side"><div class="tour-ring" style="--p:' + Math.round(done / req.length * 100) + '"><b>' + done + '/' + req.length + '</b></div>' +
+      (S.me.is_demo ? '<button class="btn btn-ghost btn-sm" type="button" data-act="demo-reset">Reset demo</button>' : '<button class="link-btn" type="button" data-act="tour-hide">Hide</button>') + '</div></header>' +
+      '<ol class="tour-steps">' + list + '</ol></section>';
   }
 
   /* --------------------------------------------------------- overview */
@@ -186,12 +267,13 @@
       return;
     }
     var t = totals();
+    var tourTop = tourVisible() ? tourCard() : '';
     var tap = S.plans.filter(function (p) { return p.status === 'needs_approval'; });
     var recent = S.plans.filter(function (p) { return p.status !== 'needs_approval'; }).slice(0, 4);
     var m = ws.mandate;
     var kpi = function (label, val, sub, cls) { return '<div class="kpi card ' + (cls || '') + '"><span>' + esc(label) + '</span><b>' + val + '</b><small>' + esc(sub) + '</small></div>'; };
-    var html = '<div class="kpis">' +
-      kpi('Received from clients', money(t.received), 'Captured with PayPal') +
+    var html = tourTop + '<div class="kpis">' +
+      kpi('Received from clients', money(t.received), S.requests.some(function (r) { return r.seeded; }) ? 'Includes seeded demo funds' : 'Captured with PayPal') +
       kpi('Paid to crew', money(t.paid), 'PayPal Payouts', 'kpi-green') +
       kpi('Free to pay out', money(t.available), 'After reserve and holds', 'kpi-blue') +
       kpi('Tax & fee reserve', money(t.reserve), 'Never paid out') +
@@ -211,7 +293,7 @@
     html += '<div class="sec-head"><h2>Client payment links</h2></div>';
     html += S.requests.slice(0, 5).map(function (r) {
       var paid = r.status === 'completed';
-      return '<div class="card req"><div><b>' + money(r.amount_cents) + '</b> ' + chip(paid ? 'Paid' : r.status === 'pending' ? 'Pending' : 'Open', paid ? 'green' : 'muted') +
+      return '<div class="card req"><div><b>' + money(r.amount_cents) + '</b> ' + chip(r.seeded ? 'Demo funds' : paid ? 'Paid' : r.status === 'pending' ? 'Pending' : 'Open', paid ? 'green' : 'muted') +
         '<p class="small">' + esc(r.project) + (r.memo ? ' · ' + esc(r.memo) : '') + '</p></div>' +
         (paid ? '<span class="muted small">' + esc(ago(r.paid_at)) + '</span>' : '<div class="req-acts"><a class="btn btn-paypal btn-sm" href="' + esc(r.url) + '" target="_blank" rel="noopener">Open pay page</a><button class="icon-btn" data-copy="' + esc(r.url) + '" title="Copy link">⧉</button></div>') + '</div>';
     }).join('') || '<p class="muted small">Create one in Crew &amp; projects or ask the agent.</p>';
@@ -380,6 +462,7 @@
     if (busy || !text) return;
     busy = true;
     addMsg('me', esc(text));
+    tourFlag('chat', true);
     var wait = addMsg('bot typing', '<span></span><span></span><span></span>');
     api('chat', { text: text }).then(function (j) {
       return refresh().then(function () {
@@ -403,8 +486,9 @@
   /* ----------------------------------------------------------- events */
 
   document.addEventListener('click', function (ev) {
-    var t = ev.target.closest('[data-view],[data-go],[data-act],[data-filter],[data-copy],[data-ask]');
+    var t = ev.target.closest('[data-tour],[data-view],[data-go],[data-act],[data-filter],[data-copy],[data-ask]');
     if (!t) return;
+    if (t.dataset.tour) { tourGo(tourSteps().filter(function (s) { return s.id === t.dataset.tour; })[0]); return; }
     if (t.dataset.view && t.tagName === 'BUTTON') { setView(t.dataset.view); return; }
     if (t.dataset.go) { setView(t.dataset.go); if (t.dataset.go === 'payouts') payFilter = 'all'; if (S) render(); return; }
     if (t.dataset.filter) { payFilter = t.dataset.filter; renderPayouts(); return; }
@@ -416,6 +500,14 @@
     var id = Number(t.dataset.id || 0);
     switch (t.dataset.act) {
       case 'demo': act(t, 'demo_seed'); break;
+      case 'demo-reset':
+        if (confirm('Reset the demo workspace? Everything in it is replaced with a fresh, funded demo.')) {
+          ['chat', 'schedule', 'ledger', 'mandate'].forEach(function (k) { try { localStorage.removeItem('konbit-tour-' + k); } catch (e) { /* private mode */ } });
+          $$('.msg', log).slice(1).forEach(function (m) { m.remove(); });
+          act(t, 'demo_reset');
+        }
+        break;
+      case 'tour-hide': tourFlag('hidden', true); render(); break;
       case 'approve': act(t, 'plan_approve', { id: id }); break;
       case 'reject': act(t, 'plan_reject', { id: id }); break;
       case 'sync': act(t, 'plan_sync', { id: id }); break;

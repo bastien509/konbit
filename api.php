@@ -74,14 +74,14 @@ try {
             engine_sweep($uid);
             $ws = workspace_snapshot($uid);
             $events = q('SELECT id, source, title, body, status, agent_summary, risk, received_at FROM fa_events WHERE owner_id = ? ORDER BY id DESC LIMIT 25', [$uid])->fetchAll();
-            $requests = q('SELECT r.id, r.pay_token, r.memo, r.amount_cents, r.status, r.payer_email, r.created_at, r.completed_at, p.name AS project FROM fa_client_payments r JOIN fa_projects p ON p.id = r.project_id WHERE r.owner_id = ? ORDER BY r.id DESC LIMIT 25', [$uid])->fetchAll();
+            $requests = q('SELECT r.id, r.pay_token, r.memo, r.amount_cents, r.status, r.payer_email, r.capture_id, r.created_at, r.completed_at, p.name AS project FROM fa_client_payments r JOIN fa_projects p ON p.id = r.project_id WHERE r.owner_id = ? ORDER BY r.id DESC LIMIT 25', [$uid])->fetchAll();
             out([
-                'me'        => ['name' => $me['name'], 'business' => $me['business_name'], 'hook_hint' => $me['hook_key_hint']],
+                'me'        => ['name' => $me['name'], 'business' => $me['business_name'], 'hook_hint' => $me['hook_key_hint'], 'is_demo' => demo_is($me)],
                 'csrf'      => $csrf,
                 'workspace' => $ws,
                 'plans'     => plans_for($uid),
                 'events'    => array_map(fn ($e) => ['id' => (int) $e['id'], 'source' => $e['source'], 'title' => $e['title'], 'body' => $e['body'], 'status' => $e['status'], 'summary' => $e['agent_summary'], 'risk' => $e['risk'], 'at' => $e['received_at'] . 'Z'], $events),
-                'requests'  => array_map(fn ($r) => ['id' => (int) $r['id'], 'url' => abs_url('pay.php?r=' . $r['pay_token']), 'memo' => $r['memo'], 'amount_cents' => (int) $r['amount_cents'], 'status' => $r['status'], 'payer' => $r['payer_email'] ? mask_email($r['payer_email']) : null, 'project' => $r['project'], 'at' => $r['created_at'] . 'Z', 'paid_at' => $r['completed_at'] ? $r['completed_at'] . 'Z' : null], $requests),
+                'requests'  => array_map(fn ($r) => ['id' => (int) $r['id'], 'url' => abs_url('pay.php?r=' . $r['pay_token']), 'memo' => $r['memo'], 'amount_cents' => (int) $r['amount_cents'], 'status' => $r['status'], 'payer' => $r['payer_email'] ? mask_email($r['payer_email']) : null, 'project' => $r['project'], 'seeded' => str_starts_with((string) $r['capture_id'], 'DEMO-SEED-'), 'at' => $r['created_at'] . 'Z', 'paid_at' => $r['completed_at'] ? $r['completed_at'] . 'Z' : null], $requests),
                 'samples'   => array_map(fn ($k, $s) => ['key' => $k, 'title' => $s['title']], array_keys(SAMPLE_EVIDENCE), SAMPLE_EVIDENCE),
                 'paypal'    => ['ready' => paypal_ready(), 'mode' => paypal_mode()],
                 'agent'     => agent_ready(),
@@ -90,6 +90,17 @@ try {
         case 'demo_seed':
             demo_seed($uid);
             out(['message' => 'Demo workspace loaded.']);
+
+        case 'demo_reset':
+            if (!demo_is($me)) {
+                throw new AppError('Only the shared judge account can be reset.');
+            }
+            if (!rate_limit("demo-reset:$uid", 12, 3600)) {
+                throw new AppError('The demo was reset many times this hour. Try again soon.');
+            }
+            demo_reset($uid);
+            session_store(['agent_history' => null]);
+            out(['message' => 'Fresh demo loaded: $1,000 of client money is in and the crew is waiting.']);
 
         case 'crew_add':
             $name = $str('name', 80);

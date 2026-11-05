@@ -72,15 +72,21 @@ Generate SDKs with APIMatic: import `openapi.yaml` at apimatic.io (or `apimatic 
 
 ## Judge walkthrough (about 3 minutes)
 
-1. Open https://petiht.com/freelanceragent/ and sign in with the demo account in the Devpost testing notes, or create a workspace and press **Load demo workspace**.
-2. **Overview → Client payment links → Open pay page.** Pay with a PayPal sandbox **personal** account. The project pot fills, 15% goes to the reserve, and the podcast's revenue split is planned.
-3. **Work inbox:**
+Sign in at https://petiht.com/freelanceragent/login.php with **username `demo`, password `Demo509`**. A **Judge tour** checklist on the first screen walks you through every step; each "Show me" button jumps to the right place. **Reset demo** gives you a fresh workspace at any time.
+
+The demo account starts with $1,000 of client money already in, so you don't need a PayPal buyer account. These starting funds are seeded and labeled "Demo funds" in the app and the ledger; they are not a PayPal capture. Every payout is a real PayPal sandbox **Payouts** call.
+
+1. **Overview:** $1,000 received, a tax reserve held back, and the podcast's revenue split ($180) waiting for your tap.
+2. **Work inbox:**
    - Tap **Calendar** (Lucie's copy approved, $80). It's auto-paid with PayPal Payouts.
    - Tap **GitHub** (Jean's landing page, $250). It's over the auto limit, so it waits in **Payouts**. Approve it.
    - Tap **URGENT: new PayPal for Jean**. It's flagged and nothing is paid.
-4. **Ask Konbit:** "Give Lucie a $20 bonus for the fast edit". It goes to Approvals, because bonuses always do. "Create a $250 payment link for the bakery". You get a real PayPal link.
-5. **Schedule** (Bryntum): drag a waiting payout to Friday. **Ledger** (AG Grid): see every item's PayPal status, the money ledger and the agent audit.
-6. **Mandate:** pause it, and every payout now needs a tap.
+3. **Ask Konbit:** "Give Lucie a $20 bonus for the fast edit". It goes to Approvals, because bonuses always do. "Create a $250 payment link for the bakery". You get a real PayPal link.
+4. **Schedule** (Bryntum): drag a waiting payout to Friday. **Ledger** (AG Grid): see every item's PayPal status, the money ledger and the agent audit.
+5. **Mandate:** pause it, and every payout now needs a tap.
+6. **Optional:** open one of the open client payment links and pay it with any PayPal sandbox **personal** account. That runs a real Orders v2 checkout and capture.
+
+You can also create your own workspace and press **Load demo workspace**. That one starts empty of money: pay its links with a sandbox buyer first.
 
 Sandbox note: payouts to the demo crew's `@konbit-crew.example` emails show **Unclaimed** in PayPal, which is normal for unregistered sandbox emails. To see **Success**, change a crew member's email to one of your sandbox personal accounts. The change waits 24 h before auto-pay, by design.
 

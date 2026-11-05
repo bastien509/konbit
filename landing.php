@@ -23,8 +23,8 @@ page_head(
       <p class="eyebrow">PayPal + Claude · agentic payouts</p>
       <h1>Your crew gets paid the moment the work is <span>proven</span>.</h1>
       <p class="lead">Freelancers who hire help spend hours chasing who delivered what and paying people by hand. Konbit watches your work tools, checks the proof, and pays your crew with PayPal Payouts, but only inside a mandate you sign.</p>
-      <div class="l-cta"><a class="btn btn-primary" href="<?= e(url('register.php')) ?>">Create a free workspace</a><a class="btn btn-ghost" href="#how">See how it works</a></div>
-      <p class="muted small">Runs on the PayPal sandbox: test money only.</p>
+      <div class="l-cta"><a class="btn btn-primary" href="<?= e(url('login.php')) ?>">Try the live demo</a><a class="btn btn-ghost" href="<?= e(url('register.php')) ?>">Create a free workspace</a></div>
+      <div class="judge-box l-judge"><b>Judges</b><span>Sign in with <code>demo</code> / <code>Demo509</code>. A guided 3-minute tour starts on the first screen. PayPal sandbox only: no real money moves.</span></div>
     </div>
     <div class="l-demo card" aria-hidden="true">
       <div class="l-ev"><i>⌥</i><div><small>GitHub · just now</small><b>PR #42 merged: landing page live</b></div></div>
@@ -75,7 +75,7 @@ page_head(
   <section class="l-final card">
     <h2>Stop paying your crew from memory.</h2>
     <p class="muted">Load the demo workspace and watch a payout go from proof to PayPal in under a minute.</p>
-    <a class="btn btn-primary" href="<?= e(url('register.php')) ?>">Start free</a>
+    <div class="l-cta"><a class="btn btn-primary" href="<?= e(url('login.php')) ?>">Try the live demo</a><a class="btn btn-ghost" href="<?= e(url('register.php')) ?>">Start free</a></div>
   </section>
 </main>
 <footer class="l-foot"><span>Konbit, a Petiht project · <a href="https://petiht.com">petiht.com</a></span><span>Konbit is Haitian Kreyòl for people working together.</span></footer>

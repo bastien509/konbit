@@ -61,9 +61,10 @@ php, mysql, paypal-orders-v2, paypal-payouts, paypal-webhooks, anthropic-claude,
 
 ## Testing instructions for judges
 Live: https://petiht.com/freelanceragent/ (PayPal sandbox, no real money)
-- Demo account: `(fill in)` / `(fill in)`
-- Or create your own workspace and press **Load demo workspace**.
-- To pay a client link, use any PayPal sandbox **personal** account.
+- **Username `demo`, password `Demo509`.** The sign-in page also has a "Fill in the demo login" button.
+- A **Judge tour** on the first screen guides you through the flow in about 3 minutes. Each step has a "Show me" button, and **Reset demo** gives you a fresh workspace any time.
+- The demo starts with $1,000 of client money already in (seeded and labeled "Demo funds"), so you don't need a PayPal buyer account. Every payout is a real PayPal sandbox Payouts call.
+- Optional: pay one of the open client links with any PayPal sandbox **personal** account to try the Orders v2 checkout.
 
 Walkthrough: see the README section "Judge walkthrough".
 

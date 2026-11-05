@@ -200,7 +200,8 @@ function client_payment_credit(int $id, array $capture, string $payerEmail = '')
         $reserve = intdiv($amount * (int) $p['reserve_pct'], 100);
         $pdo->prepare('UPDATE fa_projects SET received_cents = received_cents + ?, reserve_cents = reserve_cents + ? WHERE id = ?')
             ->execute([$amount, $reserve, $p['id']]);
-        ledger($pdo, (int) $r['owner_id'], (int) $p['id'], 'pot', 'client_payment', $amount, "cp:$id:in", ['note' => 'PayPal ' . $expected . ' ' . $currency . ($r['memo'] !== '' ? ' · ' . $r['memo'] : '')]);
+        $seeded = str_starts_with((string) ($capture['id'] ?? ''), 'DEMO-SEED-');
+        ledger($pdo, (int) $r['owner_id'], (int) $p['id'], 'pot', $seeded ? 'demo_funds' : 'client_payment', $amount, "cp:$id:in", ['note' => ($seeded ? 'Demo starting funds (seeded, not a PayPal capture) ' : 'PayPal ') . $expected . ' ' . $currency . ($r['memo'] !== '' ? ' · ' . $r['memo'] : '')]);
         if ($reserve > 0) {
             ledger($pdo, (int) $r['owner_id'], (int) $p['id'], 'reserve', 'reserve_hold', $reserve, "cp:$id:reserve", ['note' => $p['reserve_pct'] . '% tax & fee reserve']);
         }

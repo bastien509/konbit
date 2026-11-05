@@ -52,6 +52,7 @@ $nav = [
         <span class="pill" id="mandatePill">Mandate</span>
       </div>
     </header>
+    <div id="tourBar" class="tour-bar card" hidden></div>
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
     <section class="view on" data-view="overview" id="v-overview"></section>
