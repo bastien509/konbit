@@ -734,6 +734,8 @@ function plan_revenue_split(array $payment): ?array
     return plan_create($uid, $project, $items, [
         'kind' => 'split', 'created_by' => 'rule', 'client_payment_id' => (int) $payment['id'],
         'title' => 'Revenue split of ' . money($amount) . ($payment['memo'] !== '' ? ' · ' . $payment['memo'] : ''),
-        'reason' => 'The client paid ' . money($amount) . ' through PayPal. Shares follow the project split.',
+        'reason' => (str_starts_with((string) ($payment['capture_id'] ?? ''), 'DEMO-SEED-')
+            ? 'Seeded demo funds of ' . money($amount) . ' (not a PayPal capture).'
+            : 'The client paid ' . money($amount) . ' through PayPal.') . ' Shares follow the project split.',
     ]);
 }

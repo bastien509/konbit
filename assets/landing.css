@@ -1,7 +1,8 @@
 .landing { background: var(--bg); }
 .l-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; max-width: 1160px; margin: 0 auto; padding: 18px 20px; }
 .l-top nav { display: flex; align-items: center; gap: 18px; }
-.l-top nav a:not(.btn) { color: var(--muted); text-decoration: none; font-weight: 600; font-size: 14px; }
+.l-top nav a:not(.btn) { color: var(--navy); text-decoration: none; font-weight: 600; font-size: 14px; }
+.l-top nav a:not(.btn):hover { color: var(--hover); }
 main { max-width: 1160px; margin: 0 auto; padding: 0 20px; }
 .l-hero { display: grid; grid-template-columns: 1.1fr .9fr; gap: 48px; align-items: center; padding: 48px 0 64px; }
 .l-hero h1 { font-size: clamp(34px, 5vw, 56px); letter-spacing: -.035em; line-height: 1.05; }
@@ -10,7 +11,7 @@ main { max-width: 1160px; margin: 0 auto; padding: 0 20px; }
 .l-cta { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
 .l-demo { display: grid; gap: 14px; padding: 22px; transform: rotate(-1deg); }
 .l-ev { display: flex; gap: 12px; align-items: center; }
-.l-ev i { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); font-style: normal; font-weight: 800; }
+.l-ev i { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: var(--surface); color: var(--accent); font-style: normal; font-weight: 800; }
 .l-ev small { display: block; color: var(--muted); }
 .l-arrow { font-size: 13px; color: var(--muted); padding-left: 52px; }
 .l-plan { border: 1px solid var(--line); border-left: 4px solid var(--gold); border-radius: 14px; padding: 14px; display: grid; gap: 10px; }
@@ -29,7 +30,7 @@ main { max-width: 1160px; margin: 0 auto; padding: 0 20px; }
 .l-steps h3 { margin-bottom: 6px; }
 .l-safe { display: grid; grid-template-columns: 1.2fr .8fr; gap: 40px; align-items: center; padding: 56px 0; }
 .l-rules { padding: 0; list-style: none; display: grid; gap: 12px; margin-top: 18px; }
-.l-rules li { padding-left: 18px; border-left: 3px solid var(--accent); color: var(--muted); }
+.l-rules li { padding-left: 18px; border-left: 3px solid var(--red); color: var(--muted); }
 .l-rules b { color: var(--ink); display: block; }
 .l-phish { border-left: 4px solid var(--red); display: grid; gap: 8px; }
 .l-phish small { color: var(--muted); }
@@ -45,3 +46,7 @@ main { max-width: 1160px; margin: 0 auto; padding: 0 20px; }
   .l-steps { grid-template-columns: 1fr; }
   .l-demo { transform: none; }
 }
+
+.l-steps .card:hover, .l-logos span:hover { border-color: var(--hover); }
+.l-logos span { transition: border-color .15s; }
+.l-final { background: var(--surface); box-shadow: none; }

@@ -14,7 +14,8 @@ function page_head(string $title, string $bodyClass, array $bodyData = [], array
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#00209F">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121212" media="(prefers-color-scheme: dark)">
 <meta name="csrf-token" content="<?= e(csrf_token()) ?>">
 <meta name="robots" content="<?= $description !== '' ? 'index, follow' : 'noindex' ?>">
 <?php if ($description !== ''): ?><meta name="description" content="<?= e($description) ?>">
