@@ -1,0 +1,29 @@
+# Konbit (petiht.com/freelanceragent)
+Options -Indexes -MultiViews
+DirectoryIndex index.php
+
+# Schema, docs, lock files and dotfiles are never served (openapi.yaml is public on purpose).
+<FilesMatch "\.(sql|md|lock|log|ini|sh|bak|zip)$|^\.|^composer\.(json|lock)$|^package(-lock)?\.json$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+<IfModule mod_headers.c>
+    # PHP output is per-user and live: never cacheable, even if a script dies early.
+    <FilesMatch "\.php$">
+        Header always set Cache-Control "no-store, no-cache, must-revalidate, max-age=0, private"
+        Header always unset Expires
+    </FilesMatch>
+    # Versioned static assets (?v=) can be cached for a long time.
+    <FilesMatch "\.(css|js|svg|woff2?|ttf)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+    <FilesMatch "\.yaml$">
+        Header set Content-Type "text/yaml; charset=utf-8"
+    </FilesMatch>
+</IfModule>

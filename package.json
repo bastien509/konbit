@@ -1,0 +1,11 @@
+{
+  "name": "konbit",
+  "private": true,
+  "description": "Installs the front-end vendor builds that cannot be committed (Bryntum Scheduler trial).",
+  "scripts": {
+    "vendor": "node scripts/vendor.mjs"
+  },
+  "devDependencies": {
+    "@bryntum/scheduler": "npm:@bryntum/scheduler-trial@7.3.8"
+  }
+}

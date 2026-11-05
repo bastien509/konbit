@@ -1,0 +1,7 @@
+inc/config.php
+inc/*.lock
+inc/php-errors.log
+/vendor/
+# Bryntum Scheduler is commercial (trial): installed by `npm run vendor`, never committed.
+/assets/vendor/bryntum/
+/node_modules/
