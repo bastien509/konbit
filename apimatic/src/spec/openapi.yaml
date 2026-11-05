@@ -1,0 +1,181 @@
+openapi: 3.0.3
+info:
+  title: Konbit Work Events API
+  version: 1.0.0
+  description: |
+    Send proof of work (a merged pull request, a client's approval email, a finished
+    calendar session, an Upwork or Notion update) to your Konbit workspace. Claude
+    reviews it, matches it to an open milestone and proposes a PayPal payout. The
+    server then applies your signed mandate: the payout is sent at once, waits for
+    your approval, or is blocked.
+
+    Evidence is treated as untrusted text. It can never add a payee or raise a limit.
+
+    Import this file into APIMatic to generate SDKs (PHP, Python, TypeScript, Java,
+    C#, Go, Ruby) and an API portal for Zapier, GitHub Actions or your own tools.
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+servers:
+  - url: https://petiht.com/freelanceragent
+    description: Live demo (PayPal sandbox)
+security:
+  - konbitKey: []
+paths:
+  /hook.php:
+    post:
+      operationId: submitWorkEvent
+      summary: Submit work evidence for the agent to review
+      tags: [Work events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkEventInput'
+            examples:
+              githubMerge:
+                summary: A merged pull request
+                value:
+                  source: github
+                  title: Pull request #42 merged
+                  text: 'PR #42 "Landing page" was merged and deployed. Client: Landing page is live and looks great, thank you Jean!'
+      responses:
+        '201':
+          description: The agent reviewed the evidence.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkEventResult'
+        '400':
+          description: The body is not valid JSON.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Missing or wrong X-Konbit-Key.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: The body is larger than 50 KB.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: The evidence was rejected (for example, too short) or could not be reviewed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limited (20 events per hour per workspace).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    get:
+      operationId: getWorkEvent
+      summary: Get the review result and payout plans for one event
+      tags: [Work events]
+      parameters:
+        - name: event_id
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: The event and its plans.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkEventResult'
+        '401':
+          description: Missing or wrong X-Konbit-Key.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: No such event in this workspace.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  securitySchemes:
+    konbitKey:
+      type: apiKey
+      in: header
+      name: X-Konbit-Key
+      description: Workspace key from Mandate → Work-event webhook. Shown once when created.
+  schemas:
+    WorkEventInput:
+      type: object
+      required: [text]
+      properties:
+        source:
+          type: string
+          enum: [email, github, calendar, upwork, notion, slack, api, manual]
+          default: api
+        title:
+          type: string
+          maxLength: 160
+        text:
+          type: string
+          minLength: 10
+          maxLength: 6000
+          description: The raw evidence. Treated as untrusted data.
+    WorkEventResult:
+      type: object
+      required: [event_id, status]
+      properties:
+        event_id:
+          type: integer
+        status:
+          type: string
+          enum: [new, analyzing, done, ignored, flagged, error]
+          description: done = payout proposed, ignored = no action, flagged = suspicious.
+        risk:
+          type: string
+          enum: [low, medium, high]
+          nullable: true
+        summary:
+          type: string
+          nullable: true
+          description: The agent's one or two sentence summary.
+        plans:
+          type: array
+          items:
+            $ref: '#/components/schemas/PayoutPlan'
+    PayoutPlan:
+      type: object
+      required: [plan_id, title, total_cents, decision, status]
+      properties:
+        plan_id:
+          type: integer
+        title:
+          type: string
+        total_cents:
+          type: integer
+          description: Total in US cents.
+        decision:
+          type: string
+          enum: [auto, ask, block]
+          description: What the mandate decided.
+        status:
+          type: string
+          enum: [needs_approval, blocked, scheduled, sending, sent, paid, partial, failed, rejected]
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+        message:
+          type: string
