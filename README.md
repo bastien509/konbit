@@ -86,4 +86,6 @@ Sandbox note: payouts to the demo crew's `@konbit-crew.example` emails show **Un
 
 ## License
 
-MIT. See `LICENSE`. Bryntum Scheduler is commercial software and is not part of this repository; `npm run vendor` installs the public trial.
+MIT. See `LICENSE`.
+
+Third-party components keep their own licenses: AG Grid Community (MIT, `assets/vendor/ag-grid/LICENSE.txt`), and the Anthropic PHP SDK and Guzzle (MIT, via Composer). Bryntum Scheduler is commercial software and is not part of this repository; `npm run vendor` installs the public trial.
