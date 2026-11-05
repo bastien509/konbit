@@ -1,0 +1,224 @@
+{
+  "info": {
+    "name": "Konbit Work Events API",
+    "_postman_id": "a63c6e1a-c1e1-4d77-b169-a5f2cb33058a",
+    "description": "Send proof of work (a merged pull request, a client's approval email, a finished\ncalendar session, an Upwork or Notion update) to your Konbit workspace. Claude\nreviews it, matches it to an open milestone and proposes a PayPal payout. The\nserver then applies your signed mandate: the payout is sent at once, waits for\nyour approval, or is blocked.\n\nEvidence is treated as untrusted text. It can never add a payee or raise a limit.\n\nUse the generated SDKs from Zapier steps, GitHub Actions or your own scripts.\n",
+    "schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Work events",
+      "description": "Send work evidence to the payout agent and read its decision.",
+      "item": [
+        {
+          "id": "06b96ecc-17cd-4c9d-b3bb-a9e0db63d850",
+          "name": "submitWorkEvent",
+          "request": {
+            "url": {
+              "protocol": "https",
+              "host": "petiht.com",
+              "path": [
+                "freelanceragent",
+                "hook.php"
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "description": "",
+                "disabled": false
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "disabled": false
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"source\":\"github\",\"title\":\"Pull request #42 merged\",\"text\":\"PR #42 \\\"Landing page\\\" was merged and deployed. Client: Landing page is live and looks great, thank you Jean!\"}",
+              "disabled": false
+            },
+            "description": "Stores the evidence, asks the Konbit agent (Claude) to review it, and returns the\nreview together with any payout plans it created. A plan's `decision` tells you\nwhat the signed mandate allowed: `auto` (paid with PayPal Payouts), `ask`\n(waiting for the freelancer's approval) or `block` (refused by policy).\n"
+          },
+          "response": [
+            {
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "disabled": false
+                }
+              ],
+              "body": "{\"event_id\":12,\"status\":\"done\",\"risk\":\"low\",\"summary\":\"PR #42 was merged and the client confirmed the landing page is live. I proposed Jean's $250.00 milestone.\",\"plans\":[{\"plan_id\":7,\"title\":\"Jean Pierre · Landing page live\",\"total_cents\":25000,\"decision\":\"ask\",\"status\":\"needs_approval\"}]}",
+              "status": "The agent reviewed the evidence.",
+              "code": 201,
+              "name": "Response_201",
+              "id": "2879a822-304f-4d77-aec3-60ec3087a96d"
+            },
+            {
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "disabled": false
+                }
+              ],
+              "body": "{\n  \"error\": \"invalid_json\"\n}",
+              "status": "The body is not valid JSON.",
+              "code": 400,
+              "name": "Response_400",
+              "id": "fddfd8db-fb6b-4f12-9e11-7523c9f17166"
+            },
+            {
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "disabled": false
+                }
+              ],
+              "body": "{\n  \"error\": \"unauthorized\",\n  \"message\": \"Send your workspace key in the X-Konbit-Key header.\"\n}",
+              "status": "Missing or wrong X-Konbit-Key.",
+              "code": 401,
+              "name": "Response_401",
+              "id": "d9f8afd8-500f-45c2-b3d8-018cc45d8371"
+            },
+            {
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "disabled": false
+                }
+              ],
+              "body": "{\n  \"error\": \"too_large\"\n}",
+              "status": "The body is larger than 50 KB.",
+              "code": 413,
+              "name": "Response_413",
+              "id": "578467b8-5d64-4632-9b33-22f941289665"
+            },
+            {
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "disabled": false
+                }
+              ],
+              "body": "{\n  \"error\": \"rejected\",\n  \"message\": \"The evidence text is too short.\"\n}",
+              "status": "The evidence was rejected (for example, too short) or could not be reviewed.",
+              "code": 422,
+              "name": "Response_422",
+              "id": "0cca2824-b275-4a56-b9a9-a0c148c320bf"
+            },
+            {
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "disabled": false
+                }
+              ],
+              "body": "{\n  \"error\": \"rate_limited\",\n  \"message\": \"Up to 20 events per hour.\"\n}",
+              "status": "Rate limited (20 events per hour per workspace).",
+              "code": 429,
+              "name": "Response_429",
+              "id": "91a081f7-14c2-440f-a4c2-7785821a3c57"
+            }
+          ]
+        },
+        {
+          "id": "689a38ce-e654-424e-a42f-e4576a720b78",
+          "name": "getWorkEvent",
+          "request": {
+            "url": {
+              "protocol": "https",
+              "host": "petiht.com",
+              "path": [
+                "freelanceragent",
+                "hook.php"
+              ],
+              "query": [
+                {
+                  "key": "event_id",
+                  "value": "12",
+                  "description": "The `event_id` returned by submitWorkEvent.",
+                  "disabled": false
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "disabled": false
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "disabled": false
+            },
+            "description": "Returns the agent's review of an event submitted earlier, with the current status of every payout plan it created."
+          },
+          "response": [
+            {
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "disabled": false
+                }
+              ],
+              "body": "{\"event_id\":12,\"status\":\"done\",\"risk\":\"low\",\"summary\":\"PR #42 was merged and the client confirmed the landing page is live.\",\"plans\":[{\"plan_id\":7,\"title\":\"Jean Pierre · Landing page live\",\"total_cents\":25000,\"decision\":\"ask\",\"status\":\"sent\"}]}",
+              "status": "The event and its plans.",
+              "code": 200,
+              "name": "Response_200",
+              "id": "632e4153-94c1-48c4-9512-a03b8998161e"
+            },
+            {
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "disabled": false
+                }
+              ],
+              "body": "{\n  \"error\": \"unauthorized\",\n  \"message\": \"Send your workspace key in the X-Konbit-Key header.\"\n}",
+              "status": "Missing or wrong X-Konbit-Key.",
+              "code": 401,
+              "name": "Response_401",
+              "id": "2f72e2ac-d463-44c9-aa70-272cf5cefff7"
+            },
+            {
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "disabled": false
+                }
+              ],
+              "body": "{\n  \"error\": \"not_found\"\n}",
+              "status": "No such event in this workspace.",
+              "code": 404,
+              "name": "Response_404",
+              "id": "879e03ca-8ece-49b2-8e84-78bfe46d36de"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [],
+  "auth": {
+    "type": "apikey",
+    "apikey": {
+      "key": "X-Konbit-Key",
+      "value": "X-Konbit-Key41",
+      "in": "header"
+    }
+  }
+}

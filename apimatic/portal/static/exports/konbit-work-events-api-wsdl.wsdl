@@ -1,0 +1,432 @@
+<?xml version="1.0" encoding="utf-8"?>
+<definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:schemas="https://petiht.com/freelanceragent/schemas" xmlns:wsdl="https://petiht.com/freelanceragent/wsdl" targetNamespace="https://petiht.com/freelanceragent/wsdl" xmlns="http://schemas.xmlsoap.org/wsdl/">
+  <types>
+    <xs:schema xmlns:tns="https://petiht.com/freelanceragent/schemas" targetNamespace="https://petiht.com/freelanceragent/schemas" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+      <xs:element name="POST_submitWorkEvent_InputMessage" type="schemas:POST_submitWorkEvent_InputMessage" />
+      <xs:element name="POST_submitWorkEvent_OutputMessage" type="schemas:POST_submitWorkEvent_OutputMessage" />
+      <xs:element name="POST_submitWorkEvent_400" type="schemas:POST_submitWorkEvent_400" />
+      <xs:element name="POST_submitWorkEvent_401" type="schemas:POST_submitWorkEvent_401" />
+      <xs:element name="POST_submitWorkEvent_413" type="schemas:POST_submitWorkEvent_413" />
+      <xs:element name="POST_submitWorkEvent_422" type="schemas:POST_submitWorkEvent_422" />
+      <xs:element name="POST_submitWorkEvent_429" type="schemas:POST_submitWorkEvent_429" />
+      <xs:element name="GET_getWorkEvent_InputMessage" type="schemas:GET_getWorkEvent_InputMessage" />
+      <xs:element name="GET_getWorkEvent_OutputMessage" type="schemas:GET_getWorkEvent_OutputMessage" />
+      <xs:element name="GET_getWorkEvent_401" type="schemas:GET_getWorkEvent_401" />
+      <xs:element name="GET_getWorkEvent_404" type="schemas:GET_getWorkEvent_404" />
+      <xs:simpleType name="EvidenceSource">
+        <xs:annotation>
+          <xs:documentation>Where the evidence came from.</xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:string">
+          <xs:enumeration value="email" />
+          <xs:enumeration value="github" />
+          <xs:enumeration value="calendar" />
+          <xs:enumeration value="upwork" />
+          <xs:enumeration value="notion" />
+          <xs:enumeration value="slack" />
+          <xs:enumeration value="api" />
+          <xs:enumeration value="manual" />
+        </xs:restriction>
+      </xs:simpleType>
+      <xs:simpleType name="EventStatus">
+        <xs:annotation>
+          <xs:documentation>Review result: done = payout proposed, ignored = no action, flagged = suspicious.</xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:string">
+          <xs:enumeration value="new" />
+          <xs:enumeration value="analyzing" />
+          <xs:enumeration value="done" />
+          <xs:enumeration value="ignored" />
+          <xs:enumeration value="flagged" />
+          <xs:enumeration value="error" />
+        </xs:restriction>
+      </xs:simpleType>
+      <xs:simpleType name="RiskLevel">
+        <xs:annotation>
+          <xs:documentation>How risky the agent and the risk scan judged the evidence.</xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:string">
+          <xs:enumeration value="low" />
+          <xs:enumeration value="medium" />
+          <xs:enumeration value="high" />
+        </xs:restriction>
+      </xs:simpleType>
+      <xs:simpleType name="PlanDecision">
+        <xs:annotation>
+          <xs:documentation>What the signed mandate decided for a payout plan.</xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:string">
+          <xs:enumeration value="auto" />
+          <xs:enumeration value="ask" />
+          <xs:enumeration value="block" />
+        </xs:restriction>
+      </xs:simpleType>
+      <xs:simpleType name="PlanStatus">
+        <xs:annotation>
+          <xs:documentation>The payout plan's current status.</xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:string">
+          <xs:enumeration value="needs_approval" />
+          <xs:enumeration value="blocked" />
+          <xs:enumeration value="scheduled" />
+          <xs:enumeration value="sending" />
+          <xs:enumeration value="sent" />
+          <xs:enumeration value="paid" />
+          <xs:enumeration value="partial" />
+          <xs:enumeration value="failed" />
+          <xs:enumeration value="rejected" />
+        </xs:restriction>
+      </xs:simpleType>
+      <xs:complexType name="WorkEventInput">
+        <xs:annotation>
+          <xs:documentation>Work evidence to send to the agent.</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+          <xs:element minOccurs="0" default="api" name="source" type="schemas:EvidenceSource">
+            <xs:annotation>
+              <xs:documentation>Where the evidence came from.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element minOccurs="0" name="title">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>A short title, such as an email subject.</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="160" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="1" name="text">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>The raw evidence. It is treated as untrusted data.</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="6000" />
+                <xs:minLength value="10" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="WorkEventResult">
+        <xs:annotation>
+          <xs:documentation>The agent's review of one piece of evidence.</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+          <xs:element minOccurs="1" name="event_id" type="xs:integer">
+            <xs:annotation>
+              <xs:documentation>Event identifier.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element minOccurs="1" name="status" type="schemas:EventStatus">
+            <xs:annotation>
+              <xs:documentation>Review result: done = payout proposed, ignored = no action, flagged = suspicious.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element minOccurs="0" name="risk" type="schemas:RiskLevel">
+            <xs:annotation>
+              <xs:documentation>How risky the agent and the risk scan judged the evidence.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element minOccurs="0" name="summary" nillable="true" type="xs:string">
+            <xs:annotation>
+              <xs:documentation>The agent's one or two sentence summary.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element minOccurs="0" maxOccurs="unbounded" name="plans" type="schemas:PayoutPlan">
+            <xs:annotation>
+              <xs:documentation>Payout plans created from this evidence.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="PayoutPlan">
+        <xs:annotation>
+          <xs:documentation>A proposed or completed PayPal payout.</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+          <xs:element minOccurs="1" name="plan_id" type="xs:integer">
+            <xs:annotation>
+              <xs:documentation>Plan identifier.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element minOccurs="1" name="title" type="xs:string">
+            <xs:annotation>
+              <xs:documentation>Who is paid and for what.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element minOccurs="1" name="total_cents" type="xs:integer">
+            <xs:annotation>
+              <xs:documentation>Total in US cents.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element minOccurs="1" name="decision" type="schemas:PlanDecision">
+            <xs:annotation>
+              <xs:documentation>What the signed mandate decided for a payout plan.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element minOccurs="1" name="status" type="schemas:PlanStatus">
+            <xs:annotation>
+              <xs:documentation>The payout plan's current status.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="ApiError">
+        <xs:annotation>
+          <xs:documentation>An error response.</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+          <xs:element minOccurs="1" name="error" type="xs:string">
+            <xs:annotation>
+              <xs:documentation>A short machine-readable error code.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element minOccurs="0" name="message" type="xs:string">
+            <xs:annotation>
+              <xs:documentation>A human-readable explanation, when available.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="POST_submitWorkEvent_InputMessage">
+        <xs:sequence>
+          <xs:element minOccurs="1" fixed="application/json" name="Content-Type" type="xs:string" />
+          <xs:element minOccurs="1" name="body" type="schemas:WorkEventInput">
+            <xs:annotation>
+              <xs:documentation>The evidence to review. Only `text` is required.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="POST_submitWorkEvent_OutputMessage">
+        <xs:sequence>
+          <xs:element minOccurs="1" name="response201" type="schemas:WorkEventResult">
+            <xs:annotation>
+              <xs:documentation>The agent's review of one piece of evidence.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="POST_submitWorkEvent_400">
+        <xs:sequence>
+          <xs:element minOccurs="1" name="response400" type="schemas:ApiError">
+            <xs:annotation>
+              <xs:documentation>An error response.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="POST_submitWorkEvent_401">
+        <xs:sequence>
+          <xs:element minOccurs="1" name="response401" type="schemas:ApiError">
+            <xs:annotation>
+              <xs:documentation>An error response.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="POST_submitWorkEvent_413">
+        <xs:sequence>
+          <xs:element minOccurs="1" name="response413" type="schemas:ApiError">
+            <xs:annotation>
+              <xs:documentation>An error response.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="POST_submitWorkEvent_422">
+        <xs:sequence>
+          <xs:element minOccurs="1" name="response422" type="schemas:ApiError">
+            <xs:annotation>
+              <xs:documentation>An error response.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="POST_submitWorkEvent_429">
+        <xs:sequence>
+          <xs:element minOccurs="1" name="response429" type="schemas:ApiError">
+            <xs:annotation>
+              <xs:documentation>An error response.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="GET_getWorkEvent_InputMessage">
+        <xs:sequence>
+          <xs:element minOccurs="1" name="event_id">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>The `event_id` returned by submitWorkEvent.</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:integer">
+                <xs:minInclusive value="1" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="GET_getWorkEvent_OutputMessage">
+        <xs:sequence>
+          <xs:element minOccurs="1" name="response200" type="schemas:WorkEventResult">
+            <xs:annotation>
+              <xs:documentation>The agent's review of one piece of evidence.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="GET_getWorkEvent_401">
+        <xs:sequence>
+          <xs:element minOccurs="1" name="response401" type="schemas:ApiError">
+            <xs:annotation>
+              <xs:documentation>An error response.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="GET_getWorkEvent_404">
+        <xs:sequence>
+          <xs:element minOccurs="1" name="response404" type="schemas:ApiError">
+            <xs:annotation>
+              <xs:documentation>An error response.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+    </xs:schema>
+  </types>
+  <message name="POST_submitWorkEvent_InputMessage">
+    <part name="POST_submitWorkEvent_InputMessage" element="schemas:POST_submitWorkEvent_InputMessage" />
+  </message>
+  <message name="POST_submitWorkEvent_OutputMessage">
+    <part name="POST_submitWorkEvent_OutputMessage" element="schemas:POST_submitWorkEvent_OutputMessage" />
+  </message>
+  <message name="POST_submitWorkEvent_400">
+    <part name="POST_submitWorkEvent_400" element="schemas:POST_submitWorkEvent_400" />
+  </message>
+  <message name="POST_submitWorkEvent_401">
+    <part name="POST_submitWorkEvent_401" element="schemas:POST_submitWorkEvent_401" />
+  </message>
+  <message name="POST_submitWorkEvent_413">
+    <part name="POST_submitWorkEvent_413" element="schemas:POST_submitWorkEvent_413" />
+  </message>
+  <message name="POST_submitWorkEvent_422">
+    <part name="POST_submitWorkEvent_422" element="schemas:POST_submitWorkEvent_422" />
+  </message>
+  <message name="POST_submitWorkEvent_429">
+    <part name="POST_submitWorkEvent_429" element="schemas:POST_submitWorkEvent_429" />
+  </message>
+  <message name="GET_getWorkEvent_InputMessage">
+    <part name="GET_getWorkEvent_InputMessage" element="schemas:GET_getWorkEvent_InputMessage" />
+  </message>
+  <message name="GET_getWorkEvent_OutputMessage">
+    <part name="GET_getWorkEvent_OutputMessage" element="schemas:GET_getWorkEvent_OutputMessage" />
+  </message>
+  <message name="GET_getWorkEvent_401">
+    <part name="GET_getWorkEvent_401" element="schemas:GET_getWorkEvent_401" />
+  </message>
+  <message name="GET_getWorkEvent_404">
+    <part name="GET_getWorkEvent_404" element="schemas:GET_getWorkEvent_404" />
+  </message>
+  <portType name="Konbit_x0020_Work_x0020_Events_x0020_API_PortType">
+    <operation name="POST_submitWorkEvent">
+      <documentation>Stores the evidence, asks the Konbit agent (Claude) to review it, and returns the
+review together with any payout plans it created. A plan's `decision` tells you
+what the signed mandate allowed: `auto` (paid with PayPal Payouts), `ask`
+(waiting for the freelancer's approval) or `block` (refused by policy).
+</documentation>
+      <input message="wsdl:POST_submitWorkEvent_InputMessage" />
+      <output message="wsdl:POST_submitWorkEvent_OutputMessage">
+        <documentation>The agent reviewed the evidence.</documentation>
+      </output>
+      <fault name="POST_submitWorkEvent_400" message="wsdl:POST_submitWorkEvent_400">
+        <documentation>The body is not valid JSON.</documentation>
+      </fault>
+      <fault name="POST_submitWorkEvent_401" message="wsdl:POST_submitWorkEvent_401">
+        <documentation>Missing or wrong X-Konbit-Key.</documentation>
+      </fault>
+      <fault name="POST_submitWorkEvent_413" message="wsdl:POST_submitWorkEvent_413">
+        <documentation>The body is larger than 50 KB.</documentation>
+      </fault>
+      <fault name="POST_submitWorkEvent_422" message="wsdl:POST_submitWorkEvent_422">
+        <documentation>The evidence was rejected (for example, too short) or could not be reviewed.</documentation>
+      </fault>
+      <fault name="POST_submitWorkEvent_429" message="wsdl:POST_submitWorkEvent_429">
+        <documentation>Rate limited (20 events per hour per workspace).</documentation>
+      </fault>
+    </operation>
+    <operation name="GET_getWorkEvent">
+      <documentation>Returns the agent's review of an event submitted earlier, with the current status of every payout plan it created.</documentation>
+      <input message="wsdl:GET_getWorkEvent_InputMessage" />
+      <output message="wsdl:GET_getWorkEvent_OutputMessage">
+        <documentation>The event and its plans.</documentation>
+      </output>
+      <fault name="GET_getWorkEvent_401" message="wsdl:GET_getWorkEvent_401">
+        <documentation>Missing or wrong X-Konbit-Key.</documentation>
+      </fault>
+      <fault name="GET_getWorkEvent_404" message="wsdl:GET_getWorkEvent_404">
+        <documentation>No such event in this workspace.</documentation>
+      </fault>
+    </operation>
+  </portType>
+  <binding name="Konbit_x0020_Work_x0020_Events_x0020_API_Binding" type="wsdl:Konbit_x0020_Work_x0020_Events_x0020_API_PortType">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" />
+    <operation name="POST_submitWorkEvent">
+      <soap:operation soapAction="POST_submitWorkEvent" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" />
+      <input>
+        <soap:body use="literal" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" />
+      </input>
+      <output>
+        <soap:body use="literal" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" />
+      </output>
+      <fault name="POST_submitWorkEvent_400">
+        <soap:fault use="literal" name="POST_submitWorkEvent_400" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" />
+      </fault>
+      <fault name="POST_submitWorkEvent_401">
+        <soap:fault use="literal" name="POST_submitWorkEvent_401" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" />
+      </fault>
+      <fault name="POST_submitWorkEvent_413">
+        <soap:fault use="literal" name="POST_submitWorkEvent_413" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" />
+      </fault>
+      <fault name="POST_submitWorkEvent_422">
+        <soap:fault use="literal" name="POST_submitWorkEvent_422" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" />
+      </fault>
+      <fault name="POST_submitWorkEvent_429">
+        <soap:fault use="literal" name="POST_submitWorkEvent_429" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" />
+      </fault>
+    </operation>
+    <operation name="GET_getWorkEvent">
+      <soap:operation soapAction="GET_getWorkEvent" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" />
+      <input>
+        <soap:body use="literal" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" />
+      </input>
+      <output>
+        <soap:body use="literal" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" />
+      </output>
+      <fault name="GET_getWorkEvent_401">
+        <soap:fault use="literal" name="GET_getWorkEvent_401" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" />
+      </fault>
+      <fault name="GET_getWorkEvent_404">
+        <soap:fault use="literal" name="GET_getWorkEvent_404" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" />
+      </fault>
+    </operation>
+  </binding>
+  <service name="Konbit_x0020_Work_x0020_Events_x0020_API">
+    <documentation>Send proof of work (a merged pull request, a client's approval email, a finished
+calendar session, an Upwork or Notion update) to your Konbit workspace. Claude
+reviews it, matches it to an open milestone and proposes a PayPal payout. The
+server then applies your signed mandate: the payout is sent at once, waits for
+your approval, or is blocked.
+
+Evidence is treated as untrusted text. It can never add a payee or raise a limit.
+
+Use the generated SDKs from Zapier steps, GitHub Actions or your own scripts.
+</documentation>
+    <port name="default_Port" binding="wsdl:Konbit_x0020_Work_x0020_Events_x0020_API_Binding">
+      <soap:address location="https://petiht.com/freelanceragent" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" />
+    </port>
+  </service>
+</definitions>

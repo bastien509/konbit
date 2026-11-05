@@ -1,0 +1,67 @@
+_type: export
+__export_format: 4
+__export_source: apimatic.transformer
+resources:
+- name: Konbit Work Events API
+  _type: workspace
+  _id: wrk_f9dd1290960b434bb3a46fa54001a4d1
+  description: >
+    Send proof of work (a merged pull request, a client's approval email, a finished
+
+    calendar session, an Upwork or Notion update) to your Konbit workspace. Claude
+
+    reviews it, matches it to an open milestone and proposes a PayPal payout. The
+
+    server then applies your signed mandate: the payout is sent at once, waits for
+
+    your approval, or is blocked.
+
+
+    Evidence is treated as untrusted text. It can never add a payee or raise a limit.
+
+
+    Use the generated SDKs from Zapier steps, GitHub Actions or your own scripts.
+- name: Work events
+  _type: request_group
+  _id: fld_49e1e2a2439047acb2a12cb8ea24ee58
+  parentId: wrk_f9dd1290960b434bb3a46fa54001a4d1
+  description: Send work evidence to the payout agent and read its decision.
+- name: submitWorkEvent
+  method: POST
+  url: https://petiht.com/freelanceragent/hook.php
+  body:
+    mimeType: application/json
+    text: '{"source":"github","title":"Pull request #42 merged","text":"PR #42 \"Landing page\" was merged and deployed. Client: Landing page is live and looks great, thank you Jean!"}'
+  headers:
+  - name: Content-Type
+    value: application/json
+    disabled: false
+  - name: X-Konbit-Key
+    value: X-Konbit-Key88
+    disabled: false
+  _type: request
+  _id: req_4fa7ca0defe94ee9a08ab2c807024c93
+  parentId: fld_49e1e2a2439047acb2a12cb8ea24ee58
+  description: >
+    Stores the evidence, asks the Konbit agent (Claude) to review it, and returns the
+
+    review together with any payout plans it created. A plan's `decision` tells you
+
+    what the signed mandate allowed: `auto` (paid with PayPal Payouts), `ask`
+
+    (waiting for the freelancer's approval) or `block` (refused by policy).
+- name: getWorkEvent
+  method: GET
+  url: https://petiht.com/freelanceragent/hook.php
+  parameters:
+  - name: event_id
+    value: '12'
+    disabled: false
+  headers:
+  - name: X-Konbit-Key
+    value: X-Konbit-Key59
+    disabled: false
+  _type: request
+  _id: req_c6982b21fa85493ab94f90b10ae15a9e
+  parentId: fld_49e1e2a2439047acb2a12cb8ea24ee58
+  description: Returns the agent's review of an event submitted earlier, with the current status of every payout plan it created.

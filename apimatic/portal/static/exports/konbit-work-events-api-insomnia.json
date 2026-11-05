@@ -1,0 +1,68 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_source": "apimatic.transformer",
+  "resources": [
+    {
+      "name": "Konbit Work Events API",
+      "_type": "workspace",
+      "_id": "wrk_189e02b4b1124d9583be9f00aa58e8d5",
+      "description": "Send proof of work (a merged pull request, a client's approval email, a finished\ncalendar session, an Upwork or Notion update) to your Konbit workspace. Claude\nreviews it, matches it to an open milestone and proposes a PayPal payout. The\nserver then applies your signed mandate: the payout is sent at once, waits for\nyour approval, or is blocked.\n\nEvidence is treated as untrusted text. It can never add a payee or raise a limit.\n\nUse the generated SDKs from Zapier steps, GitHub Actions or your own scripts.\n"
+    },
+    {
+      "name": "Work events",
+      "_type": "request_group",
+      "_id": "fld_98bc79938f7b4a52ad0cf70d065d0d92",
+      "parentId": "wrk_189e02b4b1124d9583be9f00aa58e8d5",
+      "description": "Send work evidence to the payout agent and read its decision."
+    },
+    {
+      "name": "submitWorkEvent",
+      "method": "POST",
+      "url": "https://petiht.com/freelanceragent/hook.php",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\"source\":\"github\",\"title\":\"Pull request #42 merged\",\"text\":\"PR #42 \\\"Landing page\\\" was merged and deployed. Client: Landing page is live and looks great, thank you Jean!\"}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json",
+          "disabled": false
+        },
+        {
+          "name": "X-Konbit-Key",
+          "value": "X-Konbit-Key28",
+          "disabled": false
+        }
+      ],
+      "_type": "request",
+      "_id": "req_620790dda9764e248ac65e19d1139ae3",
+      "parentId": "fld_98bc79938f7b4a52ad0cf70d065d0d92",
+      "description": "Stores the evidence, asks the Konbit agent (Claude) to review it, and returns the\nreview together with any payout plans it created. A plan's `decision` tells you\nwhat the signed mandate allowed: `auto` (paid with PayPal Payouts), `ask`\n(waiting for the freelancer's approval) or `block` (refused by policy).\n"
+    },
+    {
+      "name": "getWorkEvent",
+      "method": "GET",
+      "url": "https://petiht.com/freelanceragent/hook.php",
+      "parameters": [
+        {
+          "name": "event_id",
+          "value": "12",
+          "disabled": false
+        }
+      ],
+      "headers": [
+        {
+          "name": "X-Konbit-Key",
+          "value": "X-Konbit-Key7",
+          "disabled": false
+        }
+      ],
+      "_type": "request",
+      "_id": "req_8dbc673af6a54ef08f1517e363459c3f",
+      "parentId": "fld_98bc79938f7b4a52ad0cf70d065d0d92",
+      "description": "Returns the agent's review of an event submitted earlier, with the current status of every payout plan it created."
+    }
+  ]
+}

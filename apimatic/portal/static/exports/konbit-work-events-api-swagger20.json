@@ -1,0 +1,505 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "Konbit Work Events API",
+    "description": "Send proof of work (a merged pull request, a client's approval email, a finished\ncalendar session, an Upwork or Notion update) to your Konbit workspace. Claude\nreviews it, matches it to an open milestone and proposes a PayPal payout. The\nserver then applies your signed mandate: the payout is sent at once, waits for\nyour approval, or is blocked.\n\nEvidence is treated as untrusted text. It can never add a payee or raise a limit.\n\nUse the generated SDKs from Zapier steps, GitHub Actions or your own scripts.\n",
+    "contact": {
+      "name": "Konbit (Petiht)",
+      "url": "https://petiht.com/freelanceragent/"
+    }
+  },
+  "host": "petiht.com",
+  "basePath": "/freelanceragent",
+  "securityDefinitions": {
+    "konbitKey": {
+      "type": "apiKey",
+      "description": "Workspace key from Mandate → Work-event webhook. It is shown once when created.",
+      "name": "X-Konbit-Key",
+      "in": "header"
+    }
+  },
+  "schemes": [
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/hook.php": {
+      "post": {
+        "description": "Stores the evidence, asks the Konbit agent (Claude) to review it, and returns the\nreview together with any payout plans it created. A plan's `decision` tells you\nwhat the signed mandate allowed: `auto` (paid with PayPal Payouts), `ask`\n(waiting for the freelancer's approval) or `block` (refused by policy).\n",
+        "summary": "submitWorkEvent",
+        "tags": [
+          "Work events"
+        ],
+        "operationId": "submitWorkEvent",
+        "deprecated": false,
+        "produces": [
+          "application/json"
+        ],
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "Content-Type",
+            "in": "header",
+            "required": false,
+            "enum": [
+              "application/json"
+            ],
+            "type": "string",
+            "description": ""
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "description": "The evidence to review. Only `text` is required.",
+            "schema": {
+              "$ref": "#/definitions/WorkEventInput"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "The agent reviewed the evidence.",
+            "schema": {
+              "$ref": "#/definitions/WorkEventResult"
+            },
+            "examples": {
+              "application/json": {
+                "event_id": 12,
+                "status": "done",
+                "risk": "low",
+                "summary": "PR #42 was merged and the client confirmed the landing page is live. I proposed Jean's $250.00 milestone.",
+                "plans": [
+                  {
+                    "plan_id": 7,
+                    "title": "Jean Pierre · Landing page live",
+                    "total_cents": 25000,
+                    "decision": "ask",
+                    "status": "needs_approval"
+                  }
+                ]
+              }
+            },
+            "headers": {}
+          },
+          "400": {
+            "description": "The body is not valid JSON.",
+            "schema": {
+              "$ref": "#/definitions/ApiError"
+            },
+            "examples": {
+              "application/json": {
+                "error": "invalid_json"
+              }
+            },
+            "headers": {}
+          },
+          "401": {
+            "description": "Missing or wrong X-Konbit-Key.",
+            "schema": {
+              "$ref": "#/definitions/ApiError"
+            },
+            "examples": {
+              "application/json": {
+                "error": "unauthorized",
+                "message": "Send your workspace key in the X-Konbit-Key header."
+              }
+            },
+            "headers": {}
+          },
+          "413": {
+            "description": "The body is larger than 50 KB.",
+            "schema": {
+              "$ref": "#/definitions/ApiError"
+            },
+            "examples": {
+              "application/json": {
+                "error": "too_large"
+              }
+            },
+            "headers": {}
+          },
+          "422": {
+            "description": "The evidence was rejected (for example, too short) or could not be reviewed.",
+            "schema": {
+              "$ref": "#/definitions/ApiError"
+            },
+            "examples": {
+              "application/json": {
+                "error": "rejected",
+                "message": "The evidence text is too short."
+              }
+            },
+            "headers": {}
+          },
+          "429": {
+            "description": "Rate limited (20 events per hour per workspace).",
+            "schema": {
+              "$ref": "#/definitions/ApiError"
+            },
+            "examples": {
+              "application/json": {
+                "error": "rate_limited",
+                "message": "Up to 20 events per hour."
+              }
+            },
+            "headers": {}
+          }
+        }
+      },
+      "get": {
+        "description": "Returns the agent's review of an event submitted earlier, with the current status of every payout plan it created.",
+        "summary": "getWorkEvent",
+        "tags": [
+          "Work events"
+        ],
+        "operationId": "getWorkEvent",
+        "deprecated": false,
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "query",
+            "required": true,
+            "type": "integer",
+            "format": "int32",
+            "minimum": 1.0,
+            "exclusiveMinimum": false,
+            "description": "The `event_id` returned by submitWorkEvent."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The event and its plans.",
+            "schema": {
+              "$ref": "#/definitions/WorkEventResult"
+            },
+            "examples": {
+              "application/json": {
+                "event_id": 12,
+                "status": "done",
+                "risk": "low",
+                "summary": "PR #42 was merged and the client confirmed the landing page is live.",
+                "plans": [
+                  {
+                    "plan_id": 7,
+                    "title": "Jean Pierre · Landing page live",
+                    "total_cents": 25000,
+                    "decision": "ask",
+                    "status": "sent"
+                  }
+                ]
+              }
+            },
+            "headers": {}
+          },
+          "401": {
+            "description": "Missing or wrong X-Konbit-Key.",
+            "schema": {
+              "$ref": "#/definitions/ApiError"
+            },
+            "examples": {
+              "application/json": {
+                "error": "unauthorized",
+                "message": "Send your workspace key in the X-Konbit-Key header."
+              }
+            },
+            "headers": {}
+          },
+          "404": {
+            "description": "No such event in this workspace.",
+            "schema": {
+              "$ref": "#/definitions/ApiError"
+            },
+            "examples": {
+              "application/json": {
+                "error": "not_found"
+              }
+            },
+            "headers": {}
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "EvidenceSource": {
+      "title": "EvidenceSource",
+      "description": "Where the evidence came from.",
+      "example": "github",
+      "type": "string",
+      "enum": [
+        "email",
+        "github",
+        "calendar",
+        "upwork",
+        "notion",
+        "slack",
+        "api",
+        "manual"
+      ]
+    },
+    "EventStatus": {
+      "title": "EventStatus",
+      "description": "Review result: done = payout proposed, ignored = no action, flagged = suspicious.",
+      "example": "done",
+      "type": "string",
+      "enum": [
+        "new",
+        "analyzing",
+        "done",
+        "ignored",
+        "flagged",
+        "error"
+      ]
+    },
+    "RiskLevel": {
+      "title": "RiskLevel",
+      "description": "How risky the agent and the risk scan judged the evidence.",
+      "example": "low",
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ]
+    },
+    "PlanDecision": {
+      "title": "PlanDecision",
+      "description": "What the signed mandate decided for a payout plan.",
+      "example": "ask",
+      "type": "string",
+      "enum": [
+        "auto",
+        "ask",
+        "block"
+      ]
+    },
+    "PlanStatus": {
+      "title": "PlanStatus",
+      "description": "The payout plan's current status.",
+      "example": "needs_approval",
+      "type": "string",
+      "enum": [
+        "needs_approval",
+        "blocked",
+        "scheduled",
+        "sending",
+        "sent",
+        "paid",
+        "partial",
+        "failed",
+        "rejected"
+      ]
+    },
+    "WorkEventInput": {
+      "title": "WorkEventInput",
+      "description": "Work evidence to send to the agent.",
+      "example": {
+        "source": "github",
+        "title": "Pull request #42 merged",
+        "text": "PR #42 \"Landing page\" was merged and deployed."
+      },
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "object",
+          "allOf": [
+            {
+              "$ref": "#/definitions/EvidenceSource"
+            },
+            {
+              "description": "Where the evidence came from.",
+              "example": "github",
+              "default": "api"
+            }
+          ]
+        },
+        "title": {
+          "description": "A short title, such as an email subject.",
+          "example": "Pull request #42 merged",
+          "type": "string",
+          "maxLength": 160
+        },
+        "text": {
+          "description": "The raw evidence. It is treated as untrusted data.",
+          "example": "PR #42 \"Landing page\" was merged and deployed.",
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 6000
+        }
+      },
+      "required": [
+        "text"
+      ]
+    },
+    "WorkEventResult": {
+      "title": "WorkEventResult",
+      "description": "The agent's review of one piece of evidence.",
+      "example": {
+        "event_id": 12,
+        "status": "done",
+        "risk": "low",
+        "summary": "PR #42 was merged and the client confirmed the landing page is live.",
+        "plans": []
+      },
+      "type": "object",
+      "properties": {
+        "event_id": {
+          "description": "Event identifier.",
+          "example": 12,
+          "type": "integer",
+          "format": "int32"
+        },
+        "status": {
+          "type": "object",
+          "allOf": [
+            {
+              "$ref": "#/definitions/EventStatus"
+            },
+            {
+              "description": "Review result: done = payout proposed, ignored = no action, flagged = suspicious.",
+              "example": "done"
+            }
+          ]
+        },
+        "risk": {
+          "type": "object",
+          "allOf": [
+            {
+              "$ref": "#/definitions/RiskLevel"
+            },
+            {
+              "description": "How risky the agent and the risk scan judged the evidence.",
+              "example": "low"
+            }
+          ]
+        },
+        "summary": {
+          "description": "The agent's one or two sentence summary.",
+          "example": "PR #42 was merged and the client confirmed the landing page is live.",
+          "type": "string"
+        },
+        "plans": {
+          "description": "Payout plans created from this evidence.",
+          "example": [],
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PayoutPlan"
+          }
+        }
+      },
+      "required": [
+        "event_id",
+        "status"
+      ]
+    },
+    "PayoutPlan": {
+      "title": "PayoutPlan",
+      "description": "A proposed or completed PayPal payout.",
+      "example": {
+        "plan_id": 7,
+        "title": "Jean Pierre · Landing page live",
+        "total_cents": 25000,
+        "decision": "ask",
+        "status": "needs_approval"
+      },
+      "type": "object",
+      "properties": {
+        "plan_id": {
+          "description": "Plan identifier.",
+          "example": 7,
+          "type": "integer",
+          "format": "int32"
+        },
+        "title": {
+          "description": "Who is paid and for what.",
+          "example": "Jean Pierre · Landing page live",
+          "type": "string"
+        },
+        "total_cents": {
+          "description": "Total in US cents.",
+          "example": 25000,
+          "type": "integer",
+          "format": "int32"
+        },
+        "decision": {
+          "type": "object",
+          "allOf": [
+            {
+              "$ref": "#/definitions/PlanDecision"
+            },
+            {
+              "description": "What the signed mandate decided for a payout plan.",
+              "example": "ask"
+            }
+          ]
+        },
+        "status": {
+          "type": "object",
+          "allOf": [
+            {
+              "$ref": "#/definitions/PlanStatus"
+            },
+            {
+              "description": "The payout plan's current status.",
+              "example": "needs_approval"
+            }
+          ]
+        }
+      },
+      "required": [
+        "plan_id",
+        "title",
+        "total_cents",
+        "decision",
+        "status"
+      ]
+    },
+    "ApiError": {
+      "title": "ApiError",
+      "description": "An error response.",
+      "example": {
+        "error": "unauthorized",
+        "message": "Send your workspace key in the X-Konbit-Key header."
+      },
+      "type": "object",
+      "properties": {
+        "error": {
+          "description": "A short machine-readable error code.",
+          "example": "unauthorized",
+          "type": "string"
+        },
+        "message": {
+          "description": "A human-readable explanation, when available.",
+          "example": "Send your workspace key in the X-Konbit-Key header.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "error"
+      ]
+    }
+  },
+  "security": [
+    {
+      "konbitKey": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Work events",
+      "description": "Send work evidence to the payout agent and read its decision."
+    }
+  ]
+}

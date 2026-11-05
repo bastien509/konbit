@@ -1,0 +1,17 @@
+# APIMatic developer portal (static). The parent folder denies .md and .zip; this portal serves
+# its LLM pages (.md) and SDK downloads (.zip) on purpose. Dotfiles stay denied by the parent rule.
+DirectoryIndex index.html
+<FilesMatch "\.(md|zip)$">
+    <IfModule mod_authz_core.c>
+        Require all granted
+    </IfModule>
+</FilesMatch>
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    <FilesMatch "\.md$">
+        Header set Content-Type "text/markdown; charset=utf-8"
+    </FilesMatch>
+    <FilesMatch "\.html$">
+        Header set Cache-Control "no-cache"
+    </FilesMatch>
+</IfModule>

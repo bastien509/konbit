@@ -1,0 +1,365 @@
+<?xml version="1.0" encoding="utf-8"?>
+<application xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:schemas="https://petiht.com/freelanceragent/schemas" xmlns="http://wadl.dev.java.net/2009/02">
+  <doc title="Konbit Work Events API" xml:lang="en">Send proof of work (a merged pull request, a client's approval email, a finished
+calendar session, an Upwork or Notion update) to your Konbit workspace. Claude
+reviews it, matches it to an open milestone and proposes a PayPal payout. The
+server then applies your signed mandate: the payout is sent at once, waits for
+your approval, or is blocked.
+
+Evidence is treated as untrusted text. It can never add a payee or raise a limit.
+
+Use the generated SDKs from Zapier steps, GitHub Actions or your own scripts.
+</doc>
+  <grammars>
+    <xs:schema xmlns:tns="https://petiht.com/freelanceragent/schemas" targetNamespace="https://petiht.com/freelanceragent/schemas" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+      <xs:element name="EvidenceSource" type="schemas:EvidenceSource" />
+      <xs:element name="EventStatus" type="schemas:EventStatus" />
+      <xs:element name="RiskLevel" type="schemas:RiskLevel" />
+      <xs:element name="PlanDecision" type="schemas:PlanDecision" />
+      <xs:element name="PlanStatus" type="schemas:PlanStatus" />
+      <xs:element name="WorkEventInput" type="schemas:WorkEventInput" />
+      <xs:element name="WorkEventResult" type="schemas:WorkEventResult" />
+      <xs:element name="PayoutPlan" type="schemas:PayoutPlan" />
+      <xs:element name="ApiError" type="schemas:ApiError" />
+      <xs:element name="submitWorkEvent_Request" type="schemas:submitWorkEvent_Request" />
+      <xs:element name="submitWorkEvent201_Response0" type="schemas:submitWorkEvent201_Response0" />
+      <xs:element name="submitWorkEvent400_Response0" type="schemas:submitWorkEvent400_Response0" />
+      <xs:element name="submitWorkEvent401_Response0" type="schemas:submitWorkEvent401_Response0" />
+      <xs:element name="submitWorkEvent413_Response0" type="schemas:submitWorkEvent413_Response0" />
+      <xs:element name="submitWorkEvent422_Response0" type="schemas:submitWorkEvent422_Response0" />
+      <xs:element name="submitWorkEvent429_Response0" type="schemas:submitWorkEvent429_Response0" />
+      <xs:element name="getWorkEvent200_Response0" type="schemas:getWorkEvent200_Response0" />
+      <xs:element name="getWorkEvent401_Response0" type="schemas:getWorkEvent401_Response0" />
+      <xs:element name="getWorkEvent404_Response0" type="schemas:getWorkEvent404_Response0" />
+      <xs:simpleType name="EvidenceSource">
+        <xs:annotation>
+          <xs:documentation>Where the evidence came from.</xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:string">
+          <xs:enumeration value="email" />
+          <xs:enumeration value="github" />
+          <xs:enumeration value="calendar" />
+          <xs:enumeration value="upwork" />
+          <xs:enumeration value="notion" />
+          <xs:enumeration value="slack" />
+          <xs:enumeration value="api" />
+          <xs:enumeration value="manual" />
+        </xs:restriction>
+      </xs:simpleType>
+      <xs:simpleType name="EventStatus">
+        <xs:annotation>
+          <xs:documentation>Review result: done = payout proposed, ignored = no action, flagged = suspicious.</xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:string">
+          <xs:enumeration value="new" />
+          <xs:enumeration value="analyzing" />
+          <xs:enumeration value="done" />
+          <xs:enumeration value="ignored" />
+          <xs:enumeration value="flagged" />
+          <xs:enumeration value="error" />
+        </xs:restriction>
+      </xs:simpleType>
+      <xs:simpleType name="RiskLevel">
+        <xs:annotation>
+          <xs:documentation>How risky the agent and the risk scan judged the evidence.</xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:string">
+          <xs:enumeration value="low" />
+          <xs:enumeration value="medium" />
+          <xs:enumeration value="high" />
+        </xs:restriction>
+      </xs:simpleType>
+      <xs:simpleType name="PlanDecision">
+        <xs:annotation>
+          <xs:documentation>What the signed mandate decided for a payout plan.</xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:string">
+          <xs:enumeration value="auto" />
+          <xs:enumeration value="ask" />
+          <xs:enumeration value="block" />
+        </xs:restriction>
+      </xs:simpleType>
+      <xs:simpleType name="PlanStatus">
+        <xs:annotation>
+          <xs:documentation>The payout plan's current status.</xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:string">
+          <xs:enumeration value="needs_approval" />
+          <xs:enumeration value="blocked" />
+          <xs:enumeration value="scheduled" />
+          <xs:enumeration value="sending" />
+          <xs:enumeration value="sent" />
+          <xs:enumeration value="paid" />
+          <xs:enumeration value="partial" />
+          <xs:enumeration value="failed" />
+          <xs:enumeration value="rejected" />
+        </xs:restriction>
+      </xs:simpleType>
+      <xs:complexType name="WorkEventInput">
+        <xs:annotation>
+          <xs:documentation>Work evidence to send to the agent.</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+          <xs:element minOccurs="0" default="api" name="source" type="schemas:EvidenceSource">
+            <xs:annotation>
+              <xs:documentation>Where the evidence came from.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element minOccurs="0" name="title">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>A short title, such as an email subject.</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="160" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="1" name="text">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>The raw evidence. It is treated as untrusted data.</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="6000" />
+                <xs:minLength value="10" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="WorkEventResult">
+        <xs:annotation>
+          <xs:documentation>The agent's review of one piece of evidence.</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+          <xs:element minOccurs="1" name="event_id" type="xs:integer">
+            <xs:annotation>
+              <xs:documentation>Event identifier.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element minOccurs="1" name="status" type="schemas:EventStatus">
+            <xs:annotation>
+              <xs:documentation>Review result: done = payout proposed, ignored = no action, flagged = suspicious.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element minOccurs="0" name="risk" type="schemas:RiskLevel">
+            <xs:annotation>
+              <xs:documentation>How risky the agent and the risk scan judged the evidence.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element minOccurs="0" name="summary" nillable="true" type="xs:string">
+            <xs:annotation>
+              <xs:documentation>The agent's one or two sentence summary.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element minOccurs="0" maxOccurs="unbounded" name="plans" type="schemas:PayoutPlan">
+            <xs:annotation>
+              <xs:documentation>Payout plans created from this evidence.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="PayoutPlan">
+        <xs:annotation>
+          <xs:documentation>A proposed or completed PayPal payout.</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+          <xs:element minOccurs="1" name="plan_id" type="xs:integer">
+            <xs:annotation>
+              <xs:documentation>Plan identifier.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element minOccurs="1" name="title" type="xs:string">
+            <xs:annotation>
+              <xs:documentation>Who is paid and for what.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element minOccurs="1" name="total_cents" type="xs:integer">
+            <xs:annotation>
+              <xs:documentation>Total in US cents.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element minOccurs="1" name="decision" type="schemas:PlanDecision">
+            <xs:annotation>
+              <xs:documentation>What the signed mandate decided for a payout plan.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element minOccurs="1" name="status" type="schemas:PlanStatus">
+            <xs:annotation>
+              <xs:documentation>The payout plan's current status.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="ApiError">
+        <xs:annotation>
+          <xs:documentation>An error response.</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+          <xs:element minOccurs="1" name="error" type="xs:string">
+            <xs:annotation>
+              <xs:documentation>A short machine-readable error code.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element minOccurs="0" name="message" type="xs:string">
+            <xs:annotation>
+              <xs:documentation>A human-readable explanation, when available.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="submitWorkEvent_Request">
+        <xs:sequence>
+          <xs:element minOccurs="1" name="body" type="schemas:WorkEventInput">
+            <xs:annotation>
+              <xs:documentation>The evidence to review. Only `text` is required.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="submitWorkEvent201_Response0">
+        <xs:sequence>
+          <xs:element minOccurs="1" name="response201" type="schemas:WorkEventResult">
+            <xs:annotation>
+              <xs:documentation>The agent's review of one piece of evidence.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="submitWorkEvent400_Response0">
+        <xs:sequence>
+          <xs:element minOccurs="1" name="response400" type="schemas:ApiError">
+            <xs:annotation>
+              <xs:documentation>An error response.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="submitWorkEvent401_Response0">
+        <xs:sequence>
+          <xs:element minOccurs="1" name="response401" type="schemas:ApiError">
+            <xs:annotation>
+              <xs:documentation>An error response.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="submitWorkEvent413_Response0">
+        <xs:sequence>
+          <xs:element minOccurs="1" name="response413" type="schemas:ApiError">
+            <xs:annotation>
+              <xs:documentation>An error response.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="submitWorkEvent422_Response0">
+        <xs:sequence>
+          <xs:element minOccurs="1" name="response422" type="schemas:ApiError">
+            <xs:annotation>
+              <xs:documentation>An error response.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="submitWorkEvent429_Response0">
+        <xs:sequence>
+          <xs:element minOccurs="1" name="response429" type="schemas:ApiError">
+            <xs:annotation>
+              <xs:documentation>An error response.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="getWorkEvent200_Response0">
+        <xs:sequence>
+          <xs:element minOccurs="1" name="response200" type="schemas:WorkEventResult">
+            <xs:annotation>
+              <xs:documentation>The agent's review of one piece of evidence.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="getWorkEvent401_Response0">
+        <xs:sequence>
+          <xs:element minOccurs="1" name="response401" type="schemas:ApiError">
+            <xs:annotation>
+              <xs:documentation>An error response.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="getWorkEvent404_Response0">
+        <xs:sequence>
+          <xs:element minOccurs="1" name="response404" type="schemas:ApiError">
+            <xs:annotation>
+              <xs:documentation>An error response.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+    </xs:schema>
+  </grammars>
+  <resources base="https://petiht.com/freelanceragent">
+    <resource id="_hook.php" path="/hook.php">
+      <method id="submitWorkEvent" name="POST">
+        <doc title="submitWorkEvent" xml:lang="en">Stores the evidence, asks the Konbit agent (Claude) to review it, and returns the
+review together with any payout plans it created. A plan's `decision` tells you
+what the signed mandate allowed: `auto` (paid with PayPal Payouts), `ask`
+(waiting for the freelancer's approval) or `block` (refused by policy).
+</doc>
+        <request>
+          <param name="Content-Type" style="header" type="xsd:string" default="application/json" required="true" fixed="application/json">
+            <doc title="Content-Type" xml:lang="en" />
+          </param>
+          <representation element="schemas:submitWorkEvent_Request" mediaType="application/json" />
+        </request>
+        <response status="201">
+          <doc title="201" xml:lang="en">The agent reviewed the evidence.</doc>
+          <representation element="schemas:submitWorkEvent201_Response0" mediaType="application/json" />
+        </response>
+        <response status="400">
+          <doc title="400" xml:lang="en">The body is not valid JSON.</doc>
+          <representation element="schemas:submitWorkEvent400_Response0" mediaType="application/json" />
+        </response>
+        <response status="401">
+          <doc title="401" xml:lang="en">Missing or wrong X-Konbit-Key.</doc>
+          <representation element="schemas:submitWorkEvent401_Response0" mediaType="application/json" />
+        </response>
+        <response status="413">
+          <doc title="413" xml:lang="en">The body is larger than 50 KB.</doc>
+          <representation element="schemas:submitWorkEvent413_Response0" mediaType="application/json" />
+        </response>
+        <response status="422">
+          <doc title="422" xml:lang="en">The evidence was rejected (for example, too short) or could not be reviewed.</doc>
+          <representation element="schemas:submitWorkEvent422_Response0" mediaType="application/json" />
+        </response>
+        <response status="429">
+          <doc title="429" xml:lang="en">Rate limited (20 events per hour per workspace).</doc>
+          <representation element="schemas:submitWorkEvent429_Response0" mediaType="application/json" />
+        </response>
+      </method>
+      <method id="getWorkEvent" name="GET">
+        <doc title="getWorkEvent" xml:lang="en">Returns the agent's review of an event submitted earlier, with the current status of every payout plan it created.</doc>
+        <request>
+          <param name="event_id" style="query" type="xsd:integer" required="true">
+            <doc title="event_id" xml:lang="en">The `event_id` returned by submitWorkEvent.</doc>
+          </param>
+        </request>
+        <response status="200">
+          <doc title="200" xml:lang="en">The event and its plans.</doc>
+          <representation element="schemas:getWorkEvent200_Response0" mediaType="application/json" />
+        </response>
+        <response status="401">
+          <doc title="401" xml:lang="en">Missing or wrong X-Konbit-Key.</doc>
+          <representation element="schemas:getWorkEvent401_Response0" mediaType="application/json" />
+        </response>
+        <response status="404">
+          <doc title="404" xml:lang="en">No such event in this workspace.</doc>
+          <representation element="schemas:getWorkEvent404_Response0" mediaType="application/json" />
+        </response>
+      </method>
+    </resource>
+  </resources>
+</application>

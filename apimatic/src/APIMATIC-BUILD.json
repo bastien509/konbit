@@ -1,0 +1,24 @@
+{
+  "$schema": "https://titan.apimatic.io/api/build/schema",
+  "buildFileVersion": "1",
+  "generatePortal": {
+    "apiSpecs": ["spec"],
+    "languageConfig": {
+      "http": {},
+      "typescript": {},
+      "php": {},
+      "python": {}
+    },
+    "headIncludes": "",
+    "portalSettings": {
+      "baseUrl": "https://petiht.com/freelanceragent/developers/",
+      "enableExport": true,
+      "themeOverrides": {
+        "themeType": "cool",
+        "palette": {
+          "primaryColor": "#00209F"
+        }
+      }
+    }
+  }
+}

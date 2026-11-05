@@ -1,0 +1,298 @@
+{
+  "swaggerVersion": "1.2",
+  "basePath": "https://petiht.com/freelanceragent",
+  "resourcePath": "/",
+  "apis": [
+    {
+      "path": "/hook.php",
+      "operations": [
+        {
+          "method": "POST",
+          "summary": "Stores the evidence, asks the Konbit agent (Claude) to review it, and returns the\nreview together with any payout plans it created. A plan's `decision` tells you\nwhat the signed mandate allowed: `auto` (paid with PayPal Payouts), `ask`\n(waiting for the freelancer's approval) or `block` (refused by policy).\n",
+          "nickname": "submitWorkEvent",
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "description": "",
+              "paramType": "header",
+              "required": true,
+              "allowMultiple": false,
+              "defaultValue": "application/json",
+              "uniqueItems": false,
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "description": "The evidence to review. Only `text` is required.",
+              "paramType": "body",
+              "required": true,
+              "allowMultiple": false,
+              "uniqueItems": false,
+              "type": "WorkEventInput"
+            }
+          ],
+          "authorizations": {
+            "konbitKey": []
+          },
+          "produces": [
+            "application/json"
+          ],
+          "consumes": [
+            "application/json"
+          ],
+          "responseMessages": [
+            {
+              "code": 400,
+              "responseModel": "ApiError",
+              "message": "The body is not valid JSON."
+            },
+            {
+              "code": 401,
+              "responseModel": "ApiError",
+              "message": "Missing or wrong X-Konbit-Key."
+            },
+            {
+              "code": 413,
+              "responseModel": "ApiError",
+              "message": "The body is larger than 50 KB."
+            },
+            {
+              "code": 422,
+              "responseModel": "ApiError",
+              "message": "The evidence was rejected (for example, too short) or could not be reviewed."
+            },
+            {
+              "code": 429,
+              "responseModel": "ApiError",
+              "message": "Rate limited (20 events per hour per workspace)."
+            }
+          ],
+          "uniqueItems": false,
+          "$ref": "WorkEventResult"
+        },
+        {
+          "method": "GET",
+          "summary": "Returns the agent's review of an event submitted earlier, with the current status of every payout plan it created.",
+          "nickname": "getWorkEvent",
+          "parameters": [
+            {
+              "name": "event_id",
+              "description": "The `event_id` returned by submitWorkEvent.",
+              "paramType": "query",
+              "required": true,
+              "allowMultiple": false,
+              "minimum": "1",
+              "maximum": "",
+              "uniqueItems": false,
+              "type": "integer",
+              "format": "int32"
+            }
+          ],
+          "authorizations": {
+            "konbitKey": []
+          },
+          "produces": [
+            "application/json"
+          ],
+          "responseMessages": [
+            {
+              "code": 401,
+              "responseModel": "ApiError",
+              "message": "Missing or wrong X-Konbit-Key."
+            },
+            {
+              "code": 404,
+              "responseModel": "ApiError",
+              "message": "No such event in this workspace."
+            }
+          ],
+          "uniqueItems": false,
+          "$ref": "WorkEventResult"
+        }
+      ]
+    }
+  ],
+  "models": {
+    "WorkEventInput": {
+      "id": "WorkEventInput",
+      "description": "Work evidence to send to the agent.",
+      "required": [
+        "text"
+      ],
+      "properties": {
+        "source": {
+          "description": "Where the evidence came from.",
+          "defaultValue": "api",
+          "enum": [
+            "email",
+            "github",
+            "calendar",
+            "upwork",
+            "notion",
+            "slack",
+            "api",
+            "manual"
+          ],
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "title": {
+          "description": "A short title, such as an email subject.",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "text": {
+          "description": "The raw evidence. It is treated as untrusted data.",
+          "uniqueItems": false,
+          "type": "string"
+        }
+      }
+    },
+    "WorkEventResult": {
+      "id": "WorkEventResult",
+      "description": "The agent's review of one piece of evidence.",
+      "required": [
+        "event_id",
+        "status"
+      ],
+      "properties": {
+        "event_id": {
+          "description": "Event identifier.",
+          "minimum": "",
+          "maximum": "",
+          "uniqueItems": false,
+          "type": "integer",
+          "format": "int32"
+        },
+        "status": {
+          "description": "Review result: done = payout proposed, ignored = no action, flagged = suspicious.",
+          "enum": [
+            "new",
+            "analyzing",
+            "done",
+            "ignored",
+            "flagged",
+            "error"
+          ],
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "risk": {
+          "description": "How risky the agent and the risk scan judged the evidence.",
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ],
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "summary": {
+          "description": "The agent's one or two sentence summary.",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "plans": {
+          "description": "Payout plans created from this evidence.",
+          "items": {
+            "$ref": "PayoutPlan"
+          },
+          "uniqueItems": false,
+          "type": "array"
+        }
+      }
+    },
+    "PayoutPlan": {
+      "id": "PayoutPlan",
+      "description": "A proposed or completed PayPal payout.",
+      "required": [
+        "plan_id",
+        "title",
+        "total_cents",
+        "decision",
+        "status"
+      ],
+      "properties": {
+        "plan_id": {
+          "description": "Plan identifier.",
+          "minimum": "",
+          "maximum": "",
+          "uniqueItems": false,
+          "type": "integer",
+          "format": "int32"
+        },
+        "title": {
+          "description": "Who is paid and for what.",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "total_cents": {
+          "description": "Total in US cents.",
+          "minimum": "",
+          "maximum": "",
+          "uniqueItems": false,
+          "type": "integer",
+          "format": "int32"
+        },
+        "decision": {
+          "description": "What the signed mandate decided for a payout plan.",
+          "enum": [
+            "auto",
+            "ask",
+            "block"
+          ],
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "status": {
+          "description": "The payout plan's current status.",
+          "enum": [
+            "needs_approval",
+            "blocked",
+            "scheduled",
+            "sending",
+            "sent",
+            "paid",
+            "partial",
+            "failed",
+            "rejected"
+          ],
+          "uniqueItems": false,
+          "type": "string"
+        }
+      }
+    },
+    "ApiError": {
+      "id": "ApiError",
+      "description": "An error response.",
+      "required": [
+        "error"
+      ],
+      "properties": {
+        "error": {
+          "description": "A short machine-readable error code.",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "message": {
+          "description": "A human-readable explanation, when available.",
+          "uniqueItems": false,
+          "type": "string"
+        }
+      }
+    }
+  },
+  "authorizations": {
+    "konbitKey": {
+      "passAs": "header",
+      "keyname": "X-Konbit-Key",
+      "type": "apiKey"
+    }
+  },
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ]
+}

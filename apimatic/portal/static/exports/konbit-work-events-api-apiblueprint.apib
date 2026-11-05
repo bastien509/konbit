@@ -1,0 +1,238 @@
+FORMAT: 1A
+HOST: https://petiht.com/freelanceragent
+
+# Konbit Work Events API
+Send proof of work (a merged pull request, a client's approval email, a finished
+calendar session, an Upwork or Notion update) to your Konbit workspace. Claude
+reviews it, matches it to an open milestone and proposes a PayPal payout. The
+server then applies your signed mandate: the payout is sent at once, waits for
+your approval, or is blocked.
+
+Evidence is treated as untrusted text. It can never add a payee or raise a limit.
+
+Use the generated SDKs from Zapier steps, GitHub Actions or your own scripts.
+
+
+## Authentication
+This API uses Custom Header for its authentication.
+
+The parameters that are needed to be sent for this type of authentication are as follows:
++ `X-Konbit-Key` - Workspace key from Mandate → Work-event webhook. It is shown once when created.
+
+# Group Work events
+
+Send work evidence to the payout agent and read its decision.
+
+## HookPhp [/hook.php]
+
+### submitWorkEvent [POST]
+Stores the evidence, asks the Konbit agent (Claude) to review it, and returns the
+review together with any payout plans it created. A plan's `decision` tells you
+what the signed mandate allowed: `auto` (paid with PayPal Payouts), `ask`
+(waiting for the freelancer's approval) or `block` (refused by policy).
+
++ Request (application/json)
+
+    + Attributes (WorkEventInput)
+
+
+    + Body
+
+            {
+                "source": "github",
+                "title": "Pull request #42 merged",
+                "text": "PR #42 \"Landing page\" was merged and deployed. Client: Landing page is live and looks great, thank you Jean!"
+            }
+
+
++ Response 201 (application/json)
+
+        The agent reviewed the evidence.
+
+    + Attributes (WorkEventResult)
+
+
+    + Body
+
+            {"event_id":12,"status":"done","risk":"low","summary":"PR #42 was merged and the client confirmed the landing page is live. I proposed Jean's $250.00 milestone.","plans":[{"plan_id":7,"title":"Jean Pierre · Landing page live","total_cents":25000,"decision":"ask","status":"needs_approval"}]}
+
+
++ Response 400 (application/json)
+
+        The body is not valid JSON.
+
+    + Attributes (ApiError)
+
+
+    + Body
+
+            {"error":"invalid_json"}
+
+
++ Response 401 (application/json)
+
+        Missing or wrong X-Konbit-Key.
+
+    + Attributes (ApiError)
+
+
+    + Body
+
+            {"error":"unauthorized","message":"Send your workspace key in the X-Konbit-Key header."}
+
+
++ Response 413 (application/json)
+
+        The body is larger than 50 KB.
+
+    + Attributes (ApiError)
+
+
+    + Body
+
+            {"error":"too_large"}
+
+
++ Response 422 (application/json)
+
+        The evidence was rejected (for example, too short) or could not be reviewed.
+
+    + Attributes (ApiError)
+
+
+    + Body
+
+            {"error":"rejected","message":"The evidence text is too short."}
+
+
++ Response 429 (application/json)
+
+        Rate limited (20 events per hour per workspace).
+
+    + Attributes (ApiError)
+
+
+    + Body
+
+            {"error":"rate_limited","message":"Up to 20 events per hour."}
+
+
+
+## HookPhp [/hook.php{?event_id}]
+
+### getWorkEvent [GET]
+Returns the agent's review of an event submitted earlier, with the current status of every payout plan it created.
++ Parameters
+    + event_id (number, required)
+
+        The `event_id` returned by submitWorkEvent.
+
+        + Sample: 12
+
++ Response 200 (application/json)
+
+        The event and its plans.
+
+    + Attributes (WorkEventResult)
+
+
+    + Body
+
+            {"event_id":12,"status":"done","risk":"low","summary":"PR #42 was merged and the client confirmed the landing page is live.","plans":[{"plan_id":7,"title":"Jean Pierre · Landing page live","total_cents":25000,"decision":"ask","status":"sent"}]}
+
+
++ Response 401 (application/json)
+
+        Missing or wrong X-Konbit-Key.
+
+    + Attributes (ApiError)
+
+
+    + Body
+
+            {"error":"unauthorized","message":"Send your workspace key in the X-Konbit-Key header."}
+
+
++ Response 404 (application/json)
+
+        No such event in this workspace.
+
+    + Attributes (ApiError)
+
+
+    + Body
+
+            {"error":"not_found"}
+
+
+
+
+# Data Structures
+
+## WorkEventInput (object)
+Work evidence to send to the agent.
+
+### Properties
++ `source` (enum[string], optional) - Where the evidence came from.
+    + `email`
+    + `github`
+    + `calendar`
+    + `upwork`
+    + `notion`
+    + `slack`
+    + `api`
+    + `manual`
++ `title`: `Pull request #42 merged` (string, optional) - A short title, such as an email subject.
++ `text`: `PR #42 "Landing page" was merged and deployed.` (string, required) - The raw evidence. It is treated as untrusted data.
+
+
+## WorkEventResult (object)
+The agent's review of one piece of evidence.
+
+### Properties
++ `event_id`: `12` (number, required) - Event identifier.
++ `status` (enum[string], required) - Review result: done = payout proposed, ignored = no action, flagged = suspicious.
+    + `new`
+    + `analyzing`
+    + `done`
+    + `ignored`
+    + `flagged`
+    + `error`
++ `risk` (enum[string], optional) - How risky the agent and the risk scan judged the evidence.
+    + `low`
+    + `medium`
+    + `high`
++ `summary`: `PR #42 was merged and the client confirmed the landing page is live.` (string, optional, nullable) - The agent's one or two sentence summary.
++ `plans` (array[PayoutPlan], optional) - Payout plans created from this evidence.
+
+
+## PayoutPlan (object)
+A proposed or completed PayPal payout.
+
+### Properties
++ `plan_id`: `7` (number, required) - Plan identifier.
++ `title`: `Jean Pierre · Landing page live` (string, required) - Who is paid and for what.
++ `total_cents`: `25000` (number, required) - Total in US cents.
++ `decision` (enum[string], required) - What the signed mandate decided for a payout plan.
+    + `auto`
+    + `ask`
+    + `block`
++ `status` (enum[string], required) - The payout plan's current status.
+    + `needs_approval`
+    + `blocked`
+    + `scheduled`
+    + `sending`
+    + `sent`
+    + `paid`
+    + `partial`
+    + `failed`
+    + `rejected`
+
+
+## ApiError (object)
+An error response.
+
+### Properties
++ `error`: `unauthorized` (string, required) - A short machine-readable error code.
++ `message`: `Send your workspace key in the X-Konbit-Key header.` (string, optional) - A human-readable explanation, when available.
+

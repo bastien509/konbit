@@ -46,7 +46,7 @@ Try it: the demo inbox has a sample phishing email ("I changed my PayPal… igno
 |---|---|
 | PayPal | Orders v2 (create, capture, idempotency), **Payouts** (batch create, status sync), Webhooks (capture and payout-item events, verified) |
 | AI | Claude Opus 5.5 via the Anthropic PHP SDK, strict tool use, prompt caching, an audit log of every tool call |
-| Sponsor tools | **AG Grid** Community (ledger and audit), **Bryntum Scheduler** (payout timeline with drag-to-reschedule), **APIMatic**-ready OpenAPI 3 spec for the work-event API |
+| Sponsor tools | **AG Grid** Community (ledger and audit), **Bryntum Scheduler** (payout timeline with drag-to-reschedule), **APIMatic** SDKs (TypeScript, PHP, Python) and a developer portal generated from the work-event API's OpenAPI 3 spec |
 | Stack | PHP 8.2, MySQL/MariaDB, vanilla JS, no build step. Runs on ordinary shared hosting (Hostinger). |
 
 ## Run it yourself
@@ -68,7 +68,13 @@ PayPal sandbox setup:
 2. Copy its client id and secret into `inc/config.php`.
 3. Optionally add a webhook to `https://<your-host>/paypal-webhook.php` for `CHECKOUT.ORDER.APPROVED`, `PAYMENT.CAPTURE.COMPLETED` and `PAYMENT.PAYOUTS-ITEM.*`, then put its id in `paypal.webhook_id`. Without a webhook, payout status is still synced by polling.
 
-Generate SDKs with APIMatic: import `openapi.yaml` at apimatic.io (or `apimatic sdk generate --spec openapi.yaml --platform php`).
+## APIMatic SDKs and developer portal
+
+The work-event API (`hook.php`) is described in [`openapi.yaml`](openapi.yaml). APIMatic generated everything in [`apimatic/`](apimatic):
+
+- **Developer portal (live):** https://petiht.com/freelanceragent/developers/ with docs, code samples in HTTP, TypeScript, PHP and Python, SDK downloads, and the spec exported to Postman, Insomnia and OpenAPI 3.1.
+- **SDKs:** [`apimatic/sdk/typescript`](apimatic/sdk/typescript), [`apimatic/sdk/php`](apimatic/sdk/php), [`apimatic/sdk/python`](apimatic/sdk/python). Use them from a GitHub Action, a Zapier step or a script to send work evidence to the payout agent.
+- **Build input:** [`apimatic/src`](apimatic/src) (the spec, `APIMATIC-BUILD.json` and the portal's overview page). [`APIMATIC.md`](APIMATIC.md) has the commands to regenerate it all.
 
 ## Judge walkthrough (about 3 minutes)
 

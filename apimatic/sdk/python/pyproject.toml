@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "konbitworkeventsapi"
+description = "Send proof of work (a merged pull request, a client's approval email, a finished calendar session, an Upwork or Notion update) to your Konbit workspace. Claude reviews it, matches it to an open milestone and proposes a PayPal payout. The server then applies your signed mandate: the payout is sent at once, waits for your approval, or is blocked.  Evidence is treated as untrusted text. It can never add a payee or raise a limit.  Use the generated SDKs from Zapier steps, GitHub Actions or your own scripts. "
+version = "1.0.0"
+dependencies = ["apimatic-core~=0.2.0, >= 0.2.24", "apimatic-core-interfaces~=0.1.0, >= 0.1.8", "apimatic-requests-client-adapter~=0.1.0, >= 0.1.10", "python-dotenv>=0.21, <2.0"]
+requires-python = ">=3.7"
+[[project.authors]]
+name = "Konbit (Petiht)"
+
+[project.optional-dependencies]
+testutils = ["pytest>=7.2.2"]
+[tool]
+[tool.setuptools]
+[tool.setuptools.packages]
+[tool.setuptools.packages.find]
+exclude = ["tests", "tests.*"]

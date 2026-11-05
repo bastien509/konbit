@@ -1,0 +1,441 @@
+openapi: 3.0.0
+info:
+  title: Konbit Work Events API
+  description: >
+    Send proof of work (a merged pull request, a client's approval email, a finished
+
+    calendar session, an Upwork or Notion update) to your Konbit workspace. Claude
+
+    reviews it, matches it to an open milestone and proposes a PayPal payout. The
+
+    server then applies your signed mandate: the payout is sent at once, waits for
+
+    your approval, or is blocked.
+
+
+    Evidence is treated as untrusted text. It can never add a payee or raise a limit.
+
+
+    Use the generated SDKs from Zapier steps, GitHub Actions or your own scripts.
+  contact:
+    name: Konbit (Petiht)
+    url: https://petiht.com/freelanceragent/
+  version: '1.0.0'
+servers:
+- url: https://petiht.com/freelanceragent
+  description: Production demo (PayPal sandbox, no real money)
+  variables: {}
+paths:
+  /hook.php:
+    post:
+      tags:
+      - Work events
+      summary: submitWorkEvent
+      description: >
+        Stores the evidence, asks the Konbit agent (Claude) to review it, and returns the
+
+        review together with any payout plans it created. A plan's `decision` tells you
+
+        what the signed mandate allowed: `auto` (paid with PayPal Payouts), `ask`
+
+        (waiting for the freelancer's approval) or `block` (refused by policy).
+      operationId: submitWorkEvent
+      parameters: []
+      requestBody:
+        description: The evidence to review. Only `text` is required.
+        content:
+          application/json:
+            schema:
+              allOf:
+              - $ref: '#/components/schemas/WorkEventInput'
+              - description: The evidence to review. Only `text` is required.
+                example:
+                  source: github
+                  title: 'Pull request #42 merged'
+                  text: 'PR #42 "Landing page" was merged and deployed. Client: Landing page is live and looks great, thank you Jean!'
+            example:
+              source: github
+              title: 'Pull request #42 merged'
+              text: 'PR #42 "Landing page" was merged and deployed. Client: Landing page is live and looks great, thank you Jean!'
+        required: true
+      responses:
+        '201':
+          description: The agent reviewed the evidence.
+          headers: {}
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/WorkEventResult'
+                - description: The agent's review of one piece of evidence.
+                  example:
+                    event_id: 12
+                    status: done
+                    risk: low
+                    summary: "PR #42 was merged and the client confirmed the landing page is live. I proposed Jean's $250.00 milestone."
+                    plans:
+                    - plan_id: 7
+                      title: Jean Pierre · Landing page live
+                      total_cents: 25000
+                      decision: ask
+                      status: needs_approval
+              example:
+                event_id: 12
+                status: done
+                risk: low
+                summary: "PR #42 was merged and the client confirmed the landing page is live. I proposed Jean's $250.00 milestone."
+                plans:
+                - plan_id: 7
+                  title: Jean Pierre · Landing page live
+                  total_cents: 25000
+                  decision: ask
+                  status: needs_approval
+        '400':
+          description: The body is not valid JSON.
+          headers: {}
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/ApiError'
+                - description: An error response.
+                  example:
+                    error: invalid_json
+              example:
+                error: invalid_json
+        '401':
+          description: Missing or wrong X-Konbit-Key.
+          headers: {}
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/ApiError'
+                - description: An error response.
+                  example:
+                    error: unauthorized
+                    message: Send your workspace key in the X-Konbit-Key header.
+              example:
+                error: unauthorized
+                message: Send your workspace key in the X-Konbit-Key header.
+        '413':
+          description: The body is larger than 50 KB.
+          headers: {}
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/ApiError'
+                - description: An error response.
+                  example:
+                    error: too_large
+              example:
+                error: too_large
+        '422':
+          description: The evidence was rejected (for example, too short) or could not be reviewed.
+          headers: {}
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/ApiError'
+                - description: An error response.
+                  example:
+                    error: rejected
+                    message: The evidence text is too short.
+              example:
+                error: rejected
+                message: The evidence text is too short.
+        '429':
+          description: Rate limited (20 events per hour per workspace).
+          headers: {}
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/ApiError'
+                - description: An error response.
+                  example:
+                    error: rate_limited
+                    message: Up to 20 events per hour.
+              example:
+                error: rate_limited
+                message: Up to 20 events per hour.
+      deprecated: false
+    get:
+      tags:
+      - Work events
+      summary: getWorkEvent
+      description: Returns the agent's review of an event submitted earlier, with the current status of every payout plan it created.
+      operationId: getWorkEvent
+      parameters:
+      - name: event_id
+        in: query
+        description: The `event_id` returned by submitWorkEvent.
+        required: true
+        style: form
+        explode: true
+        schema:
+          minimum: 1
+          type: integer
+          format: int32
+          example: 12
+      responses:
+        '200':
+          description: The event and its plans.
+          headers: {}
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/WorkEventResult'
+                - description: The agent's review of one piece of evidence.
+                  example:
+                    event_id: 12
+                    status: done
+                    risk: low
+                    summary: 'PR #42 was merged and the client confirmed the landing page is live.'
+                    plans:
+                    - plan_id: 7
+                      title: Jean Pierre · Landing page live
+                      total_cents: 25000
+                      decision: ask
+                      status: sent
+              example:
+                event_id: 12
+                status: done
+                risk: low
+                summary: 'PR #42 was merged and the client confirmed the landing page is live.'
+                plans:
+                - plan_id: 7
+                  title: Jean Pierre · Landing page live
+                  total_cents: 25000
+                  decision: ask
+                  status: sent
+        '401':
+          description: Missing or wrong X-Konbit-Key.
+          headers: {}
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/ApiError'
+                - description: An error response.
+                  example:
+                    error: unauthorized
+                    message: Send your workspace key in the X-Konbit-Key header.
+              example:
+                error: unauthorized
+                message: Send your workspace key in the X-Konbit-Key header.
+        '404':
+          description: No such event in this workspace.
+          headers: {}
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/ApiError'
+                - description: An error response.
+                  example:
+                    error: not_found
+              example:
+                error: not_found
+      deprecated: false
+components:
+  schemas:
+    EvidenceSource:
+      title: EvidenceSource
+      enum:
+      - email
+      - github
+      - calendar
+      - upwork
+      - notion
+      - slack
+      - api
+      - manual
+      type: string
+      description: Where the evidence came from.
+      example: github
+    EventStatus:
+      title: EventStatus
+      enum:
+      - new
+      - analyzing
+      - done
+      - ignored
+      - flagged
+      - error
+      type: string
+      description: 'Review result: done = payout proposed, ignored = no action, flagged = suspicious.'
+      example: done
+    RiskLevel:
+      title: RiskLevel
+      enum:
+      - low
+      - medium
+      - high
+      type: string
+      description: How risky the agent and the risk scan judged the evidence.
+      example: low
+    PlanDecision:
+      title: PlanDecision
+      enum:
+      - auto
+      - ask
+      - block
+      type: string
+      description: What the signed mandate decided for a payout plan.
+      example: ask
+    PlanStatus:
+      title: PlanStatus
+      enum:
+      - needs_approval
+      - blocked
+      - scheduled
+      - sending
+      - sent
+      - paid
+      - partial
+      - failed
+      - rejected
+      type: string
+      description: The payout plan's current status.
+      example: needs_approval
+    WorkEventInput:
+      title: WorkEventInput
+      required:
+      - text
+      type: object
+      properties:
+        source:
+          allOf:
+          - $ref: '#/components/schemas/EvidenceSource'
+          - description: Where the evidence came from.
+            example: github
+        title:
+          maxLength: 160
+          type: string
+          description: A short title, such as an email subject.
+          example: 'Pull request #42 merged'
+        text:
+          maxLength: 6000
+          minLength: 10
+          type: string
+          description: The raw evidence. It is treated as untrusted data.
+          example: 'PR #42 "Landing page" was merged and deployed.'
+      description: Work evidence to send to the agent.
+      example:
+        source: github
+        title: 'Pull request #42 merged'
+        text: 'PR #42 "Landing page" was merged and deployed.'
+    WorkEventResult:
+      title: WorkEventResult
+      required:
+      - event_id
+      - status
+      type: object
+      properties:
+        event_id:
+          type: integer
+          description: Event identifier.
+          format: int32
+          example: 12
+        status:
+          allOf:
+          - $ref: '#/components/schemas/EventStatus'
+          - description: 'Review result: done = payout proposed, ignored = no action, flagged = suspicious.'
+            example: done
+        risk:
+          allOf:
+          - $ref: '#/components/schemas/RiskLevel'
+          - description: How risky the agent and the risk scan judged the evidence.
+            example: low
+        summary:
+          type: string
+          description: The agent's one or two sentence summary.
+          nullable: true
+          example: 'PR #42 was merged and the client confirmed the landing page is live.'
+        plans:
+          type: array
+          items:
+            $ref: '#/components/schemas/PayoutPlan'
+          description: Payout plans created from this evidence.
+          example: []
+      description: The agent's review of one piece of evidence.
+      example:
+        event_id: 12
+        status: done
+        risk: low
+        summary: 'PR #42 was merged and the client confirmed the landing page is live.'
+        plans: []
+    PayoutPlan:
+      title: PayoutPlan
+      required:
+      - plan_id
+      - title
+      - total_cents
+      - decision
+      - status
+      type: object
+      properties:
+        plan_id:
+          type: integer
+          description: Plan identifier.
+          format: int32
+          example: 7
+        title:
+          type: string
+          description: Who is paid and for what.
+          example: Jean Pierre · Landing page live
+        total_cents:
+          type: integer
+          description: Total in US cents.
+          format: int32
+          example: 25000
+        decision:
+          allOf:
+          - $ref: '#/components/schemas/PlanDecision'
+          - description: What the signed mandate decided for a payout plan.
+            example: ask
+        status:
+          allOf:
+          - $ref: '#/components/schemas/PlanStatus'
+          - description: The payout plan's current status.
+            example: needs_approval
+      description: A proposed or completed PayPal payout.
+      example:
+        plan_id: 7
+        title: Jean Pierre · Landing page live
+        total_cents: 25000
+        decision: ask
+        status: needs_approval
+    ApiError:
+      title: ApiError
+      required:
+      - error
+      type: object
+      properties:
+        error:
+          type: string
+          description: A short machine-readable error code.
+          example: unauthorized
+        message:
+          type: string
+          description: A human-readable explanation, when available.
+          example: Send your workspace key in the X-Konbit-Key header.
+      description: An error response.
+      example:
+        error: unauthorized
+        message: Send your workspace key in the X-Konbit-Key header.
+  securitySchemes:
+    konbitKey:
+      type: apiKey
+      description: Workspace key from Mandate → Work-event webhook. It is shown once when created.
+      name: X-Konbit-Key
+      in: header
+security:
+- konbitKey: []
+tags:
+- name: Work events
+  description: Send work evidence to the payout agent and read its decision.

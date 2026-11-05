@@ -1,0 +1,981 @@
+#%RAML 0.8
+title: Konbit Work Events API
+version: 1.0.0
+documentation:
+- title: Konbit Work Events API
+  content: |
+    Send proof of work (a merged pull request, a client's approval email, a finished
+
+    calendar session, an Upwork or Notion update) to your Konbit workspace. Claude
+
+    reviews it, matches it to an open milestone and proposes a PayPal payout. The
+
+    server then applies your signed mandate: the payout is sent at once, waits for
+
+    your approval, or is blocked.
+
+
+    Evidence is treated as untrusted text. It can never add a payee or raise a limit.
+
+
+    Use the generated SDKs from Zapier steps, GitHub Actions or your own scripts.
+baseUri: https://petiht.com/freelanceragent
+securedBy:
+- konbitKey
+protocols:
+- HTTPS
+baseUriParameters: {}
+schemas:
+- EvidenceSource: |
+    {
+      "$schema": "http://json-schema.org/draft-04/schema#",
+      "title": "EvidenceSource",
+      "description": "Where the evidence came from.",
+      "example": "github",
+      "type": "string",
+      "additionalProperties": false,
+      "enum": [
+        "email",
+        "github",
+        "calendar",
+        "upwork",
+        "notion",
+        "slack",
+        "api",
+        "manual"
+      ]
+    }
+- EventStatus: |
+    {
+      "$schema": "http://json-schema.org/draft-04/schema#",
+      "title": "EventStatus",
+      "description": "Review result: done = payout proposed, ignored = no action, flagged = suspicious.",
+      "example": "done",
+      "type": "string",
+      "additionalProperties": false,
+      "enum": [
+        "new",
+        "analyzing",
+        "done",
+        "ignored",
+        "flagged",
+        "error"
+      ]
+    }
+- RiskLevel: |
+    {
+      "$schema": "http://json-schema.org/draft-04/schema#",
+      "title": "RiskLevel",
+      "description": "How risky the agent and the risk scan judged the evidence.",
+      "example": "low",
+      "type": "string",
+      "additionalProperties": false,
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ]
+    }
+- PlanDecision: |
+    {
+      "$schema": "http://json-schema.org/draft-04/schema#",
+      "title": "PlanDecision",
+      "description": "What the signed mandate decided for a payout plan.",
+      "example": "ask",
+      "type": "string",
+      "additionalProperties": false,
+      "enum": [
+        "auto",
+        "ask",
+        "block"
+      ]
+    }
+- PlanStatus: |
+    {
+      "$schema": "http://json-schema.org/draft-04/schema#",
+      "title": "PlanStatus",
+      "description": "The payout plan's current status.",
+      "example": "needs_approval",
+      "type": "string",
+      "additionalProperties": false,
+      "enum": [
+        "needs_approval",
+        "blocked",
+        "scheduled",
+        "sending",
+        "sent",
+        "paid",
+        "partial",
+        "failed",
+        "rejected"
+      ]
+    }
+- WorkEventInput: |
+    {
+      "$schema": "http://json-schema.org/draft-04/schema#",
+      "id": "WorkEventInput",
+      "title": "WorkEventInput",
+      "description": "Work evidence to send to the agent.",
+      "example": {
+        "source": "github",
+        "title": "Pull request #42 merged",
+        "text": "PR #42 \"Landing page\" was merged and deployed."
+      },
+      "type": "object",
+      "properties": {
+        "text": {
+          "description": "The raw evidence. It is treated as untrusted data.",
+          "example": "PR #42 \"Landing page\" was merged and deployed.",
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 6000
+        },
+        "source": {
+          "title": "EvidenceSource",
+          "description": "Where the evidence came from.",
+          "example": "github",
+          "type": "string",
+          "additionalProperties": false,
+          "enum": [
+            "email",
+            "github",
+            "calendar",
+            "upwork",
+            "notion",
+            "slack",
+            "api",
+            "manual"
+          ]
+        },
+        "title": {
+          "description": "A short title, such as an email subject.",
+          "example": "Pull request #42 merged",
+          "type": "string",
+          "maxLength": 160
+        }
+      },
+      "required": [
+        "text"
+      ]
+    }
+- WorkEventResult: |
+    {
+      "$schema": "http://json-schema.org/draft-04/schema#",
+      "id": "WorkEventResult",
+      "title": "WorkEventResult",
+      "description": "The agent's review of one piece of evidence.",
+      "example": {
+        "event_id": 12,
+        "status": "done",
+        "risk": "low",
+        "summary": "PR #42 was merged and the client confirmed the landing page is live.",
+        "plans": []
+      },
+      "type": "object",
+      "properties": {
+        "event_id": {
+          "description": "Event identifier.",
+          "example": 12,
+          "type": "integer",
+          "format": "int32"
+        },
+        "status": {
+          "title": "EventStatus",
+          "description": "Review result: done = payout proposed, ignored = no action, flagged = suspicious.",
+          "example": "done",
+          "type": "string",
+          "additionalProperties": false,
+          "enum": [
+            "new",
+            "analyzing",
+            "done",
+            "ignored",
+            "flagged",
+            "error"
+          ]
+        },
+        "risk": {
+          "title": "RiskLevel",
+          "description": "How risky the agent and the risk scan judged the evidence.",
+          "example": "low",
+          "type": "string",
+          "additionalProperties": false,
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ]
+        },
+        "summary": {
+          "description": "The agent's one or two sentence summary.",
+          "example": "PR #42 was merged and the client confirmed the landing page is live.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "plans": {
+          "description": "Payout plans created from this evidence.",
+          "example": [],
+          "type": "array",
+          "items": {
+            "id": "PayoutPlan",
+            "title": "PayoutPlan",
+            "description": "A proposed or completed PayPal payout.",
+            "example": {
+              "plan_id": 7,
+              "title": "Jean Pierre · Landing page live",
+              "total_cents": 25000,
+              "decision": "ask",
+              "status": "needs_approval"
+            },
+            "type": "object",
+            "properties": {
+              "plan_id": {
+                "description": "Plan identifier.",
+                "example": 7,
+                "type": "integer",
+                "format": "int32"
+              },
+              "title": {
+                "description": "Who is paid and for what.",
+                "example": "Jean Pierre · Landing page live",
+                "type": "string"
+              },
+              "total_cents": {
+                "description": "Total in US cents.",
+                "example": 25000,
+                "type": "integer",
+                "format": "int32"
+              },
+              "decision": {
+                "title": "PlanDecision",
+                "description": "What the signed mandate decided for a payout plan.",
+                "example": "ask",
+                "type": "string",
+                "additionalProperties": false,
+                "enum": [
+                  "auto",
+                  "ask",
+                  "block"
+                ]
+              },
+              "status": {
+                "title": "PlanStatus",
+                "description": "The payout plan's current status.",
+                "example": "needs_approval",
+                "type": "string",
+                "additionalProperties": false,
+                "enum": [
+                  "needs_approval",
+                  "blocked",
+                  "scheduled",
+                  "sending",
+                  "sent",
+                  "paid",
+                  "partial",
+                  "failed",
+                  "rejected"
+                ]
+              }
+            },
+            "required": [
+              "plan_id",
+              "title",
+              "total_cents",
+              "decision",
+              "status"
+            ]
+          }
+        }
+      },
+      "required": [
+        "event_id",
+        "status"
+      ]
+    }
+- PayoutPlan: |
+    {
+      "$schema": "http://json-schema.org/draft-04/schema#",
+      "id": "PayoutPlan",
+      "title": "PayoutPlan",
+      "description": "A proposed or completed PayPal payout.",
+      "example": {
+        "plan_id": 7,
+        "title": "Jean Pierre · Landing page live",
+        "total_cents": 25000,
+        "decision": "ask",
+        "status": "needs_approval"
+      },
+      "type": "object",
+      "properties": {
+        "plan_id": {
+          "description": "Plan identifier.",
+          "example": 7,
+          "type": "integer",
+          "format": "int32"
+        },
+        "title": {
+          "description": "Who is paid and for what.",
+          "example": "Jean Pierre · Landing page live",
+          "type": "string"
+        },
+        "total_cents": {
+          "description": "Total in US cents.",
+          "example": 25000,
+          "type": "integer",
+          "format": "int32"
+        },
+        "decision": {
+          "title": "PlanDecision",
+          "description": "What the signed mandate decided for a payout plan.",
+          "example": "ask",
+          "type": "string",
+          "additionalProperties": false,
+          "enum": [
+            "auto",
+            "ask",
+            "block"
+          ]
+        },
+        "status": {
+          "title": "PlanStatus",
+          "description": "The payout plan's current status.",
+          "example": "needs_approval",
+          "type": "string",
+          "additionalProperties": false,
+          "enum": [
+            "needs_approval",
+            "blocked",
+            "scheduled",
+            "sending",
+            "sent",
+            "paid",
+            "partial",
+            "failed",
+            "rejected"
+          ]
+        }
+      },
+      "required": [
+        "plan_id",
+        "title",
+        "total_cents",
+        "decision",
+        "status"
+      ]
+    }
+- ApiError: |
+    {
+      "$schema": "http://json-schema.org/draft-04/schema#",
+      "id": "ApiError",
+      "title": "ApiError",
+      "description": "An error response.",
+      "example": {
+        "error": "unauthorized",
+        "message": "Send your workspace key in the X-Konbit-Key header."
+      },
+      "type": "object",
+      "properties": {
+        "error": {
+          "description": "A short machine-readable error code.",
+          "example": "unauthorized",
+          "type": "string"
+        },
+        "message": {
+          "description": "A human-readable explanation, when available.",
+          "example": "Send your workspace key in the X-Konbit-Key header.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "error"
+      ]
+    }
+securitySchemes:
+- konbitKey:
+    description: Workspace key from Mandate → Work-event webhook. It is shown once when created.
+    type: x-custom
+    describedBy:
+      headers:
+        X-Konbit-Key:
+          description: Workspace key from Mandate → Work-event webhook. It is shown once when created.
+          type: string
+          required: true
+          displayName: X-Konbit-Key
+/hook.php:
+  post:
+    description: >
+      Stores the evidence, asks the Konbit agent (Claude) to review it, and returns the
+
+      review together with any payout plans it created. A plan's `decision` tells you
+
+      what the signed mandate allowed: `auto` (paid with PayPal Payouts), `ask`
+
+      (waiting for the freelancer's approval) or `block` (refused by policy).
+    headers:
+      Content-Type:
+        example: application/json
+        required: true
+        displayName: Content-Type
+        enum:
+        - application/json
+    body:
+      application/json:
+        schema: |
+          {
+            "id": "WorkEventInput",
+            "title": "WorkEventInput",
+            "description": "The evidence to review. Only `text` is required.",
+            "example": {
+              "source": "github",
+              "title": "Pull request #42 merged",
+              "text": "PR #42 \"Landing page\" was merged and deployed."
+            },
+            "type": "object",
+            "properties": {
+              "text": {
+                "description": "The raw evidence. It is treated as untrusted data.",
+                "example": "PR #42 \"Landing page\" was merged and deployed.",
+                "type": "string",
+                "minLength": 10,
+                "maxLength": 6000
+              },
+              "source": {
+                "title": "EvidenceSource",
+                "description": "Where the evidence came from.",
+                "example": "github",
+                "type": "string",
+                "additionalProperties": false,
+                "enum": [
+                  "email",
+                  "github",
+                  "calendar",
+                  "upwork",
+                  "notion",
+                  "slack",
+                  "api",
+                  "manual"
+                ]
+              },
+              "title": {
+                "description": "A short title, such as an email subject.",
+                "example": "Pull request #42 merged",
+                "type": "string",
+                "maxLength": 160
+              }
+            },
+            "required": [
+              "text"
+            ]
+          }
+        example: '{"source":"github","title":"Pull request #42 merged","text":"PR #42 \"Landing page\" was merged and deployed. Client: Landing page is live and looks great, thank you Jean!"}'
+    responses:
+      '201':
+        description: The agent reviewed the evidence.
+        body:
+          application/json:
+            schema: |
+              {
+                "id": "WorkEventResult",
+                "title": "WorkEventResult",
+                "description": "The agent's review of one piece of evidence.",
+                "example": {
+                  "event_id": 12,
+                  "status": "done",
+                  "risk": "low",
+                  "summary": "PR #42 was merged and the client confirmed the landing page is live.",
+                  "plans": []
+                },
+                "type": "object",
+                "properties": {
+                  "event_id": {
+                    "description": "Event identifier.",
+                    "example": 12,
+                    "type": "integer",
+                    "format": "int32"
+                  },
+                  "status": {
+                    "title": "EventStatus",
+                    "description": "Review result: done = payout proposed, ignored = no action, flagged = suspicious.",
+                    "example": "done",
+                    "type": "string",
+                    "additionalProperties": false,
+                    "enum": [
+                      "new",
+                      "analyzing",
+                      "done",
+                      "ignored",
+                      "flagged",
+                      "error"
+                    ]
+                  },
+                  "risk": {
+                    "title": "RiskLevel",
+                    "description": "How risky the agent and the risk scan judged the evidence.",
+                    "example": "low",
+                    "type": "string",
+                    "additionalProperties": false,
+                    "enum": [
+                      "low",
+                      "medium",
+                      "high"
+                    ]
+                  },
+                  "summary": {
+                    "description": "The agent's one or two sentence summary.",
+                    "example": "PR #42 was merged and the client confirmed the landing page is live.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "plans": {
+                    "description": "Payout plans created from this evidence.",
+                    "example": [],
+                    "type": "array",
+                    "items": {
+                      "id": "PayoutPlan",
+                      "title": "PayoutPlan",
+                      "description": "A proposed or completed PayPal payout.",
+                      "example": {
+                        "plan_id": 7,
+                        "title": "Jean Pierre · Landing page live",
+                        "total_cents": 25000,
+                        "decision": "ask",
+                        "status": "needs_approval"
+                      },
+                      "type": "object",
+                      "properties": {
+                        "plan_id": {
+                          "description": "Plan identifier.",
+                          "example": 7,
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        "title": {
+                          "description": "Who is paid and for what.",
+                          "example": "Jean Pierre · Landing page live",
+                          "type": "string"
+                        },
+                        "total_cents": {
+                          "description": "Total in US cents.",
+                          "example": 25000,
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        "decision": {
+                          "title": "PlanDecision",
+                          "description": "What the signed mandate decided for a payout plan.",
+                          "example": "ask",
+                          "type": "string",
+                          "additionalProperties": false,
+                          "enum": [
+                            "auto",
+                            "ask",
+                            "block"
+                          ]
+                        },
+                        "status": {
+                          "title": "PlanStatus",
+                          "description": "The payout plan's current status.",
+                          "example": "needs_approval",
+                          "type": "string",
+                          "additionalProperties": false,
+                          "enum": [
+                            "needs_approval",
+                            "blocked",
+                            "scheduled",
+                            "sending",
+                            "sent",
+                            "paid",
+                            "partial",
+                            "failed",
+                            "rejected"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "plan_id",
+                        "title",
+                        "total_cents",
+                        "decision",
+                        "status"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "event_id",
+                  "status"
+                ]
+              }
+            example: "{\"event_id\":12,\"status\":\"done\",\"risk\":\"low\",\"summary\":\"PR #42 was merged and the client confirmed the landing page is live. I proposed Jean's $250.00 milestone.\",\"plans\":[{\"plan_id\":7,\"title\":\"Jean Pierre · Landing page live\",\"total_cents\":25000,\"decision\":\"ask\",\"status\":\"needs_approval\"}]}"
+      '400':
+        description: The body is not valid JSON.
+        body:
+          application/json:
+            schema: |
+              {
+                "id": "ApiError",
+                "title": "ApiError",
+                "description": "An error response.",
+                "example": {
+                  "error": "unauthorized",
+                  "message": "Send your workspace key in the X-Konbit-Key header."
+                },
+                "type": "object",
+                "properties": {
+                  "error": {
+                    "description": "A short machine-readable error code.",
+                    "example": "unauthorized",
+                    "type": "string"
+                  },
+                  "message": {
+                    "description": "A human-readable explanation, when available.",
+                    "example": "Send your workspace key in the X-Konbit-Key header.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "error"
+                ]
+              }
+            example: '{"error":"invalid_json"}'
+      '401':
+        description: Missing or wrong X-Konbit-Key.
+        body:
+          application/json:
+            schema: |
+              {
+                "id": "ApiError",
+                "title": "ApiError",
+                "description": "An error response.",
+                "example": {
+                  "error": "unauthorized",
+                  "message": "Send your workspace key in the X-Konbit-Key header."
+                },
+                "type": "object",
+                "properties": {
+                  "error": {
+                    "description": "A short machine-readable error code.",
+                    "example": "unauthorized",
+                    "type": "string"
+                  },
+                  "message": {
+                    "description": "A human-readable explanation, when available.",
+                    "example": "Send your workspace key in the X-Konbit-Key header.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "error"
+                ]
+              }
+            example: '{"error":"unauthorized","message":"Send your workspace key in the X-Konbit-Key header."}'
+      '413':
+        description: The body is larger than 50 KB.
+        body:
+          application/json:
+            schema: |
+              {
+                "id": "ApiError",
+                "title": "ApiError",
+                "description": "An error response.",
+                "example": {
+                  "error": "unauthorized",
+                  "message": "Send your workspace key in the X-Konbit-Key header."
+                },
+                "type": "object",
+                "properties": {
+                  "error": {
+                    "description": "A short machine-readable error code.",
+                    "example": "unauthorized",
+                    "type": "string"
+                  },
+                  "message": {
+                    "description": "A human-readable explanation, when available.",
+                    "example": "Send your workspace key in the X-Konbit-Key header.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "error"
+                ]
+              }
+            example: '{"error":"too_large"}'
+      '422':
+        description: The evidence was rejected (for example, too short) or could not be reviewed.
+        body:
+          application/json:
+            schema: |
+              {
+                "id": "ApiError",
+                "title": "ApiError",
+                "description": "An error response.",
+                "example": {
+                  "error": "unauthorized",
+                  "message": "Send your workspace key in the X-Konbit-Key header."
+                },
+                "type": "object",
+                "properties": {
+                  "error": {
+                    "description": "A short machine-readable error code.",
+                    "example": "unauthorized",
+                    "type": "string"
+                  },
+                  "message": {
+                    "description": "A human-readable explanation, when available.",
+                    "example": "Send your workspace key in the X-Konbit-Key header.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "error"
+                ]
+              }
+            example: '{"error":"rejected","message":"The evidence text is too short."}'
+      '429':
+        description: Rate limited (20 events per hour per workspace).
+        body:
+          application/json:
+            schema: |
+              {
+                "id": "ApiError",
+                "title": "ApiError",
+                "description": "An error response.",
+                "example": {
+                  "error": "unauthorized",
+                  "message": "Send your workspace key in the X-Konbit-Key header."
+                },
+                "type": "object",
+                "properties": {
+                  "error": {
+                    "description": "A short machine-readable error code.",
+                    "example": "unauthorized",
+                    "type": "string"
+                  },
+                  "message": {
+                    "description": "A human-readable explanation, when available.",
+                    "example": "Send your workspace key in the X-Konbit-Key header.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "error"
+                ]
+              }
+            example: '{"error":"rate_limited","message":"Up to 20 events per hour."}'
+  get:
+    description: Returns the agent's review of an event submitted earlier, with the current status of every payout plan it created.
+    queryParameters:
+      event_id:
+        description: The `event_id` returned by submitWorkEvent.
+        type: integer
+        example: '12'
+        required: true
+        displayName: event_id
+        minimum: '1'
+    responses:
+      '200':
+        description: The event and its plans.
+        body:
+          application/json:
+            schema: |
+              {
+                "id": "WorkEventResult",
+                "title": "WorkEventResult",
+                "description": "The agent's review of one piece of evidence.",
+                "example": {
+                  "event_id": 12,
+                  "status": "done",
+                  "risk": "low",
+                  "summary": "PR #42 was merged and the client confirmed the landing page is live.",
+                  "plans": []
+                },
+                "type": "object",
+                "properties": {
+                  "event_id": {
+                    "description": "Event identifier.",
+                    "example": 12,
+                    "type": "integer",
+                    "format": "int32"
+                  },
+                  "status": {
+                    "title": "EventStatus",
+                    "description": "Review result: done = payout proposed, ignored = no action, flagged = suspicious.",
+                    "example": "done",
+                    "type": "string",
+                    "additionalProperties": false,
+                    "enum": [
+                      "new",
+                      "analyzing",
+                      "done",
+                      "ignored",
+                      "flagged",
+                      "error"
+                    ]
+                  },
+                  "risk": {
+                    "title": "RiskLevel",
+                    "description": "How risky the agent and the risk scan judged the evidence.",
+                    "example": "low",
+                    "type": "string",
+                    "additionalProperties": false,
+                    "enum": [
+                      "low",
+                      "medium",
+                      "high"
+                    ]
+                  },
+                  "summary": {
+                    "description": "The agent's one or two sentence summary.",
+                    "example": "PR #42 was merged and the client confirmed the landing page is live.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "plans": {
+                    "description": "Payout plans created from this evidence.",
+                    "example": [],
+                    "type": "array",
+                    "items": {
+                      "id": "PayoutPlan",
+                      "title": "PayoutPlan",
+                      "description": "A proposed or completed PayPal payout.",
+                      "example": {
+                        "plan_id": 7,
+                        "title": "Jean Pierre · Landing page live",
+                        "total_cents": 25000,
+                        "decision": "ask",
+                        "status": "needs_approval"
+                      },
+                      "type": "object",
+                      "properties": {
+                        "plan_id": {
+                          "description": "Plan identifier.",
+                          "example": 7,
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        "title": {
+                          "description": "Who is paid and for what.",
+                          "example": "Jean Pierre · Landing page live",
+                          "type": "string"
+                        },
+                        "total_cents": {
+                          "description": "Total in US cents.",
+                          "example": 25000,
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        "decision": {
+                          "title": "PlanDecision",
+                          "description": "What the signed mandate decided for a payout plan.",
+                          "example": "ask",
+                          "type": "string",
+                          "additionalProperties": false,
+                          "enum": [
+                            "auto",
+                            "ask",
+                            "block"
+                          ]
+                        },
+                        "status": {
+                          "title": "PlanStatus",
+                          "description": "The payout plan's current status.",
+                          "example": "needs_approval",
+                          "type": "string",
+                          "additionalProperties": false,
+                          "enum": [
+                            "needs_approval",
+                            "blocked",
+                            "scheduled",
+                            "sending",
+                            "sent",
+                            "paid",
+                            "partial",
+                            "failed",
+                            "rejected"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "plan_id",
+                        "title",
+                        "total_cents",
+                        "decision",
+                        "status"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "event_id",
+                  "status"
+                ]
+              }
+            example: '{"event_id":12,"status":"done","risk":"low","summary":"PR #42 was merged and the client confirmed the landing page is live.","plans":[{"plan_id":7,"title":"Jean Pierre · Landing page live","total_cents":25000,"decision":"ask","status":"sent"}]}'
+      '401':
+        description: Missing or wrong X-Konbit-Key.
+        body:
+          application/json:
+            schema: |
+              {
+                "id": "ApiError",
+                "title": "ApiError",
+                "description": "An error response.",
+                "example": {
+                  "error": "unauthorized",
+                  "message": "Send your workspace key in the X-Konbit-Key header."
+                },
+                "type": "object",
+                "properties": {
+                  "error": {
+                    "description": "A short machine-readable error code.",
+                    "example": "unauthorized",
+                    "type": "string"
+                  },
+                  "message": {
+                    "description": "A human-readable explanation, when available.",
+                    "example": "Send your workspace key in the X-Konbit-Key header.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "error"
+                ]
+              }
+            example: '{"error":"unauthorized","message":"Send your workspace key in the X-Konbit-Key header."}'
+      '404':
+        description: No such event in this workspace.
+        body:
+          application/json:
+            schema: |
+              {
+                "id": "ApiError",
+                "title": "ApiError",
+                "description": "An error response.",
+                "example": {
+                  "error": "unauthorized",
+                  "message": "Send your workspace key in the X-Konbit-Key header."
+                },
+                "type": "object",
+                "properties": {
+                  "error": {
+                    "description": "A short machine-readable error code.",
+                    "example": "unauthorized",
+                    "type": "string"
+                  },
+                  "message": {
+                    "description": "A human-readable explanation, when available.",
+                    "example": "Send your workspace key in the X-Konbit-Key header.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "error"
+                ]
+              }
+            example: '{"error":"not_found"}'

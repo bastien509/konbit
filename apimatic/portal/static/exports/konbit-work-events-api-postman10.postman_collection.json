@@ -1,0 +1,142 @@
+{
+  "id": "2dc85918-4f47-4036-9988-433ba03978b5",
+  "name": "Konbit Work Events API",
+  "description": "Send proof of work (a merged pull request, a client's approval email, a finished\ncalendar session, an Upwork or Notion update) to your Konbit workspace. Claude\nreviews it, matches it to an open milestone and proposes a PayPal payout. The\nserver then applies your signed mandate: the payout is sent at once, waits for\nyour approval, or is blocked.\n\nEvidence is treated as untrusted text. It can never add a payee or raise a limit.\n\nUse the generated SDKs from Zapier steps, GitHub Actions or your own scripts.\n",
+  "order": [],
+  "folders": [
+    {
+      "id": "57fe43bf-a956-4c92-9c35-77edea6b9433",
+      "name": "Work events",
+      "description": "Send work evidence to the payout agent and read its decision.",
+      "order": [
+        "4e4c2234-979e-410f-9cbe-a420110ab7de",
+        "2b46e50d-2039-44bb-bcfa-98f0b1a5f813"
+      ],
+      "collection_id": "2dc85918-4f47-4036-9988-433ba03978b5"
+    }
+  ],
+  "requests": [
+    {
+      "folder": "57fe43bf-a956-4c92-9c35-77edea6b9433",
+      "id": "4e4c2234-979e-410f-9cbe-a420110ab7de",
+      "name": "submitWorkEvent",
+      "dataMode": "raw",
+      "dataDisabled": false,
+      "descriptionFormat": "markdown",
+      "description": "Stores the evidence, asks the Konbit agent (Claude) to review it, and returns the\nreview together with any payout plans it created. A plan's `decision` tells you\nwhat the signed mandate allowed: `auto` (paid with PayPal Payouts), `ask`\n(waiting for the freelancer's approval) or `block` (refused by policy).\n",
+      "headers": "Content-Type:application/json\nAccept:application/json\n",
+      "method": "POST",
+      "pathVariables": {},
+      "url": "https://petiht.com/freelanceragent/hook.php",
+      "responses": [
+        {
+          "request": "4e4c2234-979e-410f-9cbe-a420110ab7de",
+          "id": "77c3afb9-7a04-4aa1-9160-dc8c8998b2d0",
+          "name": "Response_201",
+          "status": "The agent reviewed the evidence.",
+          "responseCode": {
+            "code": 201,
+            "name": "201",
+            "detail": "The agent reviewed the evidence."
+          },
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "mime": "application/json",
+          "text": "{\"event_id\":12,\"status\":\"done\",\"risk\":\"low\",\"summary\":\"PR #42 was merged and the client confirmed the landing page is live. I proposed Jean's $250.00 milestone.\",\"plans\":[{\"plan_id\":7,\"title\":\"Jean Pierre · Landing page live\",\"total_cents\":25000,\"decision\":\"ask\",\"status\":\"needs_approval\"}]}",
+          "language": "Text",
+          "rawDataType": "text"
+        }
+      ],
+      "rawModeData": "{\"source\":\"github\",\"title\":\"Pull request #42 merged\",\"text\":\"PR #42 \\\"Landing page\\\" was merged and deployed. Client: Landing page is live and looks great, thank you Jean!\"}",
+      "collectionId": "2dc85918-4f47-4036-9988-433ba03978b5",
+      "queryParams": [],
+      "headerData": [
+        {
+          "key": "Content-Type",
+          "value": "application/json",
+          "description": ""
+        },
+        {
+          "key": "Accept",
+          "value": "application/json"
+        }
+      ],
+      "pathVariableData": []
+    },
+    {
+      "folder": "57fe43bf-a956-4c92-9c35-77edea6b9433",
+      "id": "2b46e50d-2039-44bb-bcfa-98f0b1a5f813",
+      "name": "getWorkEvent",
+      "dataDisabled": false,
+      "descriptionFormat": "markdown",
+      "description": "Returns the agent's review of an event submitted earlier, with the current status of every payout plan it created.",
+      "headers": "Accept:application/json\n",
+      "method": "GET",
+      "pathVariables": {},
+      "url": "https://petiht.com/freelanceragent/hook.php?event_id=12",
+      "responses": [
+        {
+          "request": "2b46e50d-2039-44bb-bcfa-98f0b1a5f813",
+          "id": "5a447c00-f656-4fab-9f2b-a45e52699500",
+          "name": "Response_200",
+          "status": "The event and its plans.",
+          "responseCode": {
+            "code": 200,
+            "name": "200",
+            "detail": "The event and its plans."
+          },
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "mime": "application/json",
+          "text": "{\"event_id\":12,\"status\":\"done\",\"risk\":\"low\",\"summary\":\"PR #42 was merged and the client confirmed the landing page is live.\",\"plans\":[{\"plan_id\":7,\"title\":\"Jean Pierre · Landing page live\",\"total_cents\":25000,\"decision\":\"ask\",\"status\":\"sent\"}]}",
+          "language": "Text",
+          "rawDataType": "text"
+        }
+      ],
+      "collectionId": "2dc85918-4f47-4036-9988-433ba03978b5",
+      "queryParams": [
+        {
+          "key": "event_id",
+          "value": "12",
+          "description": "The `event_id` returned by submitWorkEvent."
+        }
+      ],
+      "headerData": [
+        {
+          "key": "Accept",
+          "value": "application/json"
+        }
+      ],
+      "pathVariableData": []
+    }
+  ],
+  "variables": [],
+  "auth": {
+    "type": "apikey",
+    "apikey": [
+      {
+        "key": "in",
+        "value": "header",
+        "type": "string"
+      },
+      {
+        "key": "key",
+        "value": "X-Konbit-Key",
+        "type": "string"
+      },
+      {
+        "key": "value",
+        "value": "X-Konbit-Key35",
+        "type": "string"
+      }
+    ]
+  }
+}

@@ -1,0 +1,136 @@
+# API Name: "Konbit Work Events API"
+# Host: https://petiht.com/freelanceragent
+# Send proof of work (a merged pull request, a client's approval email, a finished\ncalendar session, an Upwork or Notion update) to your Konbit workspace. Claude\nreviews it, matches it to an open milestone and proposes a PayPal payout. The\nserver then applies your signed mandate: the payout is sent at once, waits for\nyour approval, or is blocked.\n\nEvidence is treated as untrusted text. It can never add a payee or raise a limit.\n\nUse the generated SDKs from Zapier steps, GitHub Actions or your own scripts.
+
+"Where the evidence came from."
+enum EvidenceSource {
+    API
+    CALENDAR
+    EMAIL
+    GITHUB
+    MANUAL
+    NOTION
+    SLACK
+    UPWORK
+}
+
+"Review result: done = payout proposed, ignored = no action, flagged = suspicious."
+enum EventStatus {
+    ANALYZING
+    DONE
+    ERROR
+    FLAGGED
+    IGNORED
+    NEW
+}
+
+"How risky the agent and the risk scan judged the evidence."
+enum RiskLevel {
+    HIGH
+    LOW
+    MEDIUM
+}
+
+"What the signed mandate decided for a payout plan."
+enum PlanDecision {
+    ASK
+    AUTO
+    BLOCK
+}
+
+"The payout plan's current status."
+enum PlanStatus {
+    BLOCKED
+    FAILED
+    NEEDS_APPROVAL
+    PAID
+    PARTIAL
+    REJECTED
+    SCHEDULED
+    SENDING
+    SENT
+}
+
+"Work evidence to send to the agent."
+type WorkEventInput {
+    "Where the evidence came from."
+    source: EvidenceSource!
+    "A short title, such as an email subject."
+    title: String!
+    "The raw evidence. It is treated as untrusted data."
+    text: String!
+}
+
+"The agent's review of one piece of evidence."
+type WorkEventResult {
+    "Event identifier."
+    eventId: Int!
+    "Review result: done = payout proposed, ignored = no action, flagged = suspicious."
+    status: EventStatus!
+    "How risky the agent and the risk scan judged the evidence."
+    risk: RiskLevel!
+    "The agent's one or two sentence summary."
+    summary: String
+    "Payout plans created from this evidence."
+    plans: [PayoutPlan!]
+}
+
+"A proposed or completed PayPal payout."
+type PayoutPlan {
+    "Plan identifier."
+    planId: Int!
+    "Who is paid and for what."
+    title: String!
+    "Total in US cents."
+    totalCents: Int!
+    "What the signed mandate decided for a payout plan."
+    decision: PlanDecision!
+    "The payout plan's current status."
+    status: PlanStatus!
+}
+
+"An error response."
+type ApiError {
+    "A short machine-readable error code."
+    error: String!
+    "A human-readable explanation, when available."
+    message: String!
+}
+
+"Work evidence to send to the agent."
+input WorkEventInput1 {
+    "Where the evidence came from."
+    source: EvidenceSource!
+    "A short title, such as an email subject."
+    title: String!
+    "The raw evidence. It is treated as untrusted data."
+    text: String!
+}
+
+input CreateSubmitworkeventInput {
+    contentType: String!
+    "The evidence to review. Only `text` is required."
+    body: WorkEventInput1!
+    xKonbitKey: String!
+}
+
+input GetWorkEventInput {
+    "The `event_id` returned by submitWorkEvent."
+    eventId: Int!
+    xKonbitKey: String!
+}
+
+type Query {
+    "Returns the agent's review of an event submitted earlier, with the current status of every payout plan it created."
+    getWorkEvent(input: GetWorkEventInput!): WorkEventResult!
+}
+
+type Mutation {
+    "Stores the evidence, asks the Konbit agent (Claude) to review it, and returns the\nreview together with any payout plans it created. A plan's `decision` tells you\nwhat the signed mandate allowed: `auto` (paid with PayPal Payouts), `ask`\n(waiting for the freelancer's approval) or `block` (refused by policy)."
+    createSubmitworkevent(input: CreateSubmitworkeventInput!): WorkEventResult!
+}
+
+schema {
+    mutation: Mutation
+    query: Query
+}

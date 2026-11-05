@@ -9,6 +9,7 @@ Your crew gets paid the moment the work is proven. Claude reads the proof, and P
 ## Links
 - Live demo: https://petiht.com/freelanceragent/ (PayPal sandbox)
 - Code: https://github.com/bastien509/konbit (public, MIT)
+- Developer portal (APIMatic): https://petiht.com/freelanceragent/developers/
 - Video: (YouTube link)
 
 ## About the project
@@ -57,7 +58,7 @@ php, mysql, paypal-orders-v2, paypal-payouts, paypal-webhooks, anthropic-claude,
 ## Sponsor prizes this entry targets
 - **AG Grid:** ledger, payout items and agent audit grids, with pinned totals, filters, quick search and CSV export.
 - **Bryntum:** a Scheduler with crew as resources and payouts/milestones as events, color-coded by PayPal status. Drag-to-reschedule is validated by the server against the mandate.
-- **APIMatic:** `openapi.yaml` for the work-event API, ready to generate SDKs and a portal (add the generated SDK link here once it is built).
+- **APIMatic:** the work-event API's OpenAPI 3 spec was imported into APIMatic, which generated TypeScript, PHP and Python SDKs (in the repo under `apimatic/sdk`) and a live developer portal at https://petiht.com/freelanceragent/developers/ with code samples, SDK downloads and Postman/Insomnia exports.
 
 ## Testing instructions for judges
 Live: https://petiht.com/freelanceragent/ (PayPal sandbox, no real money)
